@@ -20,7 +20,7 @@ def load_pdf(pdf_path):
             text = page.extract_text() or ""
             pages.append({
                 "source": path.name,
-                "page": i,
+                "page": i, 
                 "text": text,
             })
     return pages    

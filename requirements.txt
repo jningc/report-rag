@@ -1,0 +1,7 @@
+# 直接依赖：代码里实际 import 的包
+pdfplumber
+langchain-text-splitters
+langchain-community
+langchain-core
+python-dotenv
+faiss-cpu
