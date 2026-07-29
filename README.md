@@ -61,7 +61,7 @@ report-rag/
 
 ```bash
 # 克隆仓库
-git clone < >
+git clone https://github.com/jningc/report-rag
 cd report-rag
 
 # 创建虚拟环境（可选）
