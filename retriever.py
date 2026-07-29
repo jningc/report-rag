@@ -10,13 +10,18 @@ from pathlib import Path
 from indexer import DEFAULT_INDEX_DIR, load_index
 
 
-def search(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):
-    """相似度检索，返回 top-k 文档块。"""
+def search_with_scores(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):
+    """相似度检索，返回 (Document, 相关度) 列表；相关度 0~1，越高越相关。"""
     if not query.strip():
         raise ValueError("query 不能为空")
 
-    vs = load_index(index_dir=index_dir) #加载索引
-    return vs.similarity_search(query, k=k) #相似度检索，返回 top-k 文档块
+    vs = load_index(index_dir=index_dir)
+    return vs.similarity_search_with_relevance_scores(query, k=k)
+
+
+def search(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):
+    """相似度检索，返回 top-k 文档块。"""
+    return [doc for doc, _ in search_with_scores(query, k=k, index_dir=index_dir)]
 
 
 if __name__ == "__main__":

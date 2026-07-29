@@ -14,11 +14,14 @@ from dotenv import load_dotenv
 from langchain_community.chat_models.tongyi import ChatTongyi
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from retriever import search
+from retriever import search_with_scores
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 DEFAULT_MODEL = "qwen-plus"
+# 最高相关度低于此阈值时拒答（0~1，越高表示要求越严）
+MIN_RELEVANCE_SCORE = 0.3
+REFUSE_ANSWER = "根据现有资料无法回答。"
 
 SYSTEM_PROMPT = """你是企业内部制度助手。请仅根据用户提供的「参考资料」回答问题。
 规则：
@@ -74,15 +77,17 @@ def ask(question: str, k: int = 3, model=DEFAULT_MODEL) -> dict:
     if not question.strip():
         raise ValueError("question 不能为空")
 
-    docs = search(question, k=k) #返回top-k 文档块
+    hits = search_with_scores(question, k=k)
 
-    # 拒答：检索无结果
-    if not docs:
+    # 拒答：无结果，或最高相关度不够
+    if not hits or hits[0][1] < MIN_RELEVANCE_SCORE:
         return {
             "question": question,
-            "answer": "根据现有资料无法回答。",
+            "answer": REFUSE_ANSWER,
             "sources": [],
         }
+
+    docs = [doc for doc, _ in hits]
 
     context = _format_context(docs) #把检索到的 Document 列表格式化为 prompt 中的参考资料块
     user_prompt = f"参考资料：\n\n{context}\n\n问题：{question}"

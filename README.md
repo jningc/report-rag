@@ -9,7 +9,7 @@
 - **FAISS 向量库**：DashScope embedding 建库，支持本地持久化
 - **RAG 问答**：检索 top-k 相关片段，调用通义千问生成回答
 - **引用出处**：回答附带 `source` / `page`
-- **拒答**：检索无结果时返回「根据现有资料无法回答」
+- **拒答**：检索无结果或相关度过低时返回「根据现有资料无法回答」
 - **CLI 入口**：`index` 建库 / `ask` 问答
 
 ## 技术栈
@@ -189,6 +189,6 @@ python rag.py
 - 首次 `ask` 前必须先执行 `index` 建库
 - `data/faiss_index/` 已在 `.gitignore` 中，克隆后需本地重建索引
 - Embedding 与 LLM 均调用 DashScope API，会产生少量费用
-- 当前拒答策略为「检索无结果」；相似度阈值拒答可作为后续优化
+- **拒答**：检索无结果，或最高相关度低于 `MIN_RELEVANCE_SCORE`（默认 0.3）时不调用 LLM
 
 
