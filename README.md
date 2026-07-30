@@ -14,6 +14,7 @@
 - **拒答**：检索无结果或相关度过低时不调用 LLM
 - **检索层测评**：8 条固定用例自动验证命中与拒答
 - **CLI 入口**：`index` 建库 / `ask` 问答 / `eval` 测评
+- **Web 界面**：Streamlit 浏览器问答，侧边栏可调 top-k、一键试示例问题
 
 ## 技术栈
 
@@ -24,6 +25,7 @@
 | Embedding | 本地 `BAAI/bge-small-zh-v1.5`（sentence-transformers） |
 | 向量库 | FAISS（LangChain 封装） |
 | LLM | DevAGI OpenAI 兼容 API（默认 `gpt-3.5-turbo`） |
+| Web UI | Streamlit（`app.py`） |
 
 Embedding 在本地运行，**建库与检索无需 API Key**；`ask` 仅 LLM 调用需要 DevAGI Key。
 
@@ -49,6 +51,7 @@ flowchart LR
 ```
 report-rag/
 ├── main.py              # CLI 入口（index / ask / eval）
+├── app.py               # Streamlit Web 问答界面
 ├── docs_loader.py       # PDF 按页读取
 ├── chunker.py           # 文本切分
 ├── indexer.py           # 向量化 + FAISS 建库/加载
@@ -127,6 +130,18 @@ python main.py ask "出差打车怎么报销" -k 5
 python main.py eval
 ```
 
+### 6. Web 界面（Streamlit）
+
+建库并配置好 `.env` 后，启动浏览器问答：
+
+```bash
+streamlit run app.py
+```
+
+默认地址：<http://localhost:8501>。界面支持输入问题、调节检索条数（top-k），侧边栏提供示例问题一键提问；回答与 CLI 一致，附带引用出处。
+
+首次运行 Streamlit 可能在终端询问邮箱，直接按 Enter 跳过即可。
+
 ## CLI 用法
 
 ```bash
@@ -140,6 +155,21 @@ python main.py ask "餐饮报销有什么要求" -k 3
 python main.py eval -k 5
 python eval.py
 ```
+
+## Web 界面
+
+```bash
+streamlit run app.py
+```
+
+| 功能 | 说明 |
+|------|------|
+| 问题输入 | 主区域文本框 +「提问」按钮 |
+| 检索条数 | 侧边栏 slider 调节 top-k（1–10） |
+| 示例问题 | 侧边栏一键填入并提问 |
+| 索引检查 | 未建库时页面提示执行 `python main.py index` |
+
+底层复用 `rag.ask()`，需配置 `DEVAGI_API_KEY`。
 
 ## 模块说明
 
@@ -203,7 +233,7 @@ python eval.py
 
 ## 注意事项
 
-- 首次 `ask` / `eval` 前须先 `python main.py index`
+- 首次 `ask` / `eval` / Web 界面前须先 `python main.py index`
 - 更换 embedding 模型后须删除 `data/faiss_index/` 并重建索引
 - `data/faiss_index/` 已在 `.gitignore`，克隆后需本地建库
 - DashScope 方案在 `indexer.py` / `rag.py` 中以注释保留，可切换回通义千问
