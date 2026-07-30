@@ -5,9 +5,27 @@
 输出: list[Document]，每条含 page_content 与 metadata（source / page）
 """
 
-from pathlib import Path
-
 from indexer import DEFAULT_INDEX_DIR, load_index
+
+# 进程内缓存，避免本地 BGE 每次 search 重复加载
+_vectorstore = None        # 缓存：已加载的 FAISS 对象
+_cached_index_dir = None   # 记录当前缓存对应哪个索引目录
+
+def clear_cache():
+    """清空 vectorstore 缓存；重建索引后可调用。"""
+    global _vectorstore, _cached_index_dir
+    _vectorstore = None
+    _cached_index_dir = None
+
+
+def _get_vectorstore(index_dir=DEFAULT_INDEX_DIR):
+    """加载并缓存 FAISS vectorstore，同一 index_dir 只加载一次。"""
+    global _vectorstore, _cached_index_dir
+    index_dir_key = str(index_dir)
+    if _vectorstore is None or _cached_index_dir != index_dir_key:
+        _vectorstore = load_index(index_dir=index_dir) #记下目录
+        _cached_index_dir = index_dir_key
+    return _vectorstore
 
 
 def search_with_scores(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):
@@ -15,7 +33,7 @@ def search_with_scores(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):
     if not query.strip():
         raise ValueError("query 不能为空")
 
-    vs = load_index(index_dir=index_dir)
+    vs = _get_vectorstore(index_dir=index_dir)
     return vs.similarity_search_with_relevance_scores(query, k=k)
 
 

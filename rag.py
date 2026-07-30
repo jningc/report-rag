@@ -11,7 +11,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_community.chat_models.tongyi import ChatTongyi
+# from langchain_community.chat_models.tongyi import ChatTongyi
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from retriever import search_with_scores
@@ -20,7 +21,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 DEFAULT_MODEL = "qwen-plus"
 # 最高相关度低于此阈值时拒答（0~1，越高表示要求越严）
-MIN_RELEVANCE_SCORE = 0.3
+MIN_RELEVANCE_SCORE = 0.4
 REFUSE_ANSWER = "根据现有资料无法回答。"
 
 SYSTEM_PROMPT = """你是企业内部制度助手。请仅根据用户提供的「参考资料」回答问题。
@@ -30,14 +31,24 @@ SYSTEM_PROMPT = """你是企业内部制度助手。请仅根据用户提供的�
 3. 回答末尾列出引用，格式：[来源文件名 第N页]。"""
 
 
-def _get_llm(model=DEFAULT_MODEL):
-    """创建 DashScope 对话模型客户端。"""
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
+# def _get_llm(model=DEFAULT_MODEL):
+#     """创建 DashScope 对话模型客户端。"""
+#     api_key = os.environ.get("DASHSCOPE_API_KEY")
+#     if not api_key:
+#         raise RuntimeError("请先在环境变量或 .env 中设置 DASHSCOPE_API_KEY")
+#     return ChatTongyi(model=model, dashscope_api_key=api_key)
+
+def _get_llm(model=None):
+    api_key = os.environ.get("DEVAGI_API_KEY")
+    base_url = os.environ.get("DEVAGI_BASE_URL", "https://api.fe8.cn/v1")
+    model = model or os.environ.get("DEVAGI_MODEL", "gpt-3.5-turbo")
     if not api_key:
-        raise RuntimeError("请先在环境变量或 .env 中设置 DASHSCOPE_API_KEY")
-    return ChatTongyi(model=model, dashscope_api_key=api_key)
-
-
+        raise RuntimeError("请设置 DEVAGI_API_KEY")
+    return ChatOpenAI(
+        model=model,
+        openai_api_key=api_key,
+        openai_api_base=base_url,
+    )
 def _format_context(docs) -> str:
     """把检索到的 Document 列表格式化为 prompt 中的参考资料块。"""
     parts = []

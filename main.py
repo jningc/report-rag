@@ -44,6 +44,15 @@ def cmd_ask(args):
             print(f"  - {s['source']} 第{s['page']}页")
 
 
+def cmd_eval(args):
+    """检索层测评。"""
+    from eval import run_eval
+
+    failures = run_eval(k=args.k)
+    if failures:
+        raise SystemExit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="report-rag 企业内部制度知识库")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -60,6 +69,10 @@ def main():
     p_ask.add_argument("question", help="用户问题")
     p_ask.add_argument("-k", type=int, default=3, help="检索条数，默认 3")
     p_ask.set_defaults(func=cmd_ask)
+
+    p_eval = sub.add_parser("eval", help="检索层测评（不调 LLM）")
+    p_eval.add_argument("-k", type=int, default=3, help="检索条数，默认 3")
+    p_eval.set_defaults(func=cmd_eval)
 
     args = parser.parse_args()
     args.func(args)

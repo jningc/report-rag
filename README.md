@@ -2,15 +2,18 @@
 
 模拟企业内部制度知识库：基于 PDF 制度文档，实现 **解析 → 分块 → 向量检索 → 带出处回答** 的 RAG 问答系统。覆盖报销、请假、IT 支持、产品 FAQ 等场景。数据为自建可公开复现材料，非真实公司机密。
 
+仓库地址：<https://github.com/jningc/report-rag>
+
 ## 功能特性
 
 - **PDF 按页解析**：保留文件名与页码，便于溯源
 - **按页切分**：chunk 不跨页合并，出处精确到页
-- **FAISS 向量库**：DashScope embedding 建库，支持本地持久化
-- **RAG 问答**：检索 top-k 相关片段，调用通义千问生成回答
+- **FAISS 向量库**：本地 BGE embedding 建库，支持持久化
+- **RAG 问答**：检索 top-k 相关片段，调用 LLM 生成回答
 - **引用出处**：回答附带 `source` / `page`
-- **拒答**：检索无结果或相关度过低时返回「根据现有资料无法回答」
-- **CLI 入口**：`index` 建库 / `ask` 问答
+- **拒答**：检索无结果或相关度过低时不调用 LLM
+- **检索层测评**：8 条固定用例自动验证命中与拒答
+- **CLI 入口**：`index` 建库 / `ask` 问答 / `eval` 测评
 
 ## 技术栈
 
@@ -18,9 +21,11 @@
 |------|------|
 | PDF 解析 | pdfplumber |
 | 文本切分 | langchain-text-splitters |
-| Embedding | DashScope `text-embedding-v3` |
+| Embedding | 本地 `BAAI/bge-small-zh-v1.5`（sentence-transformers） |
 | 向量库 | FAISS（LangChain 封装） |
-| LLM | DashScope 通义千问 `qwen-plus` |
+| LLM | DevAGI OpenAI 兼容 API（默认 `gpt-3.5-turbo`） |
+
+Embedding 在本地运行，**建库与检索无需 API Key**；`ask` 仅 LLM 调用需要 DevAGI Key。
 
 ## 架构
 
@@ -29,12 +34,13 @@ flowchart LR
     PDF[data/raw_pdfs] --> Loader[docs_loader]
     Loader --> Chunker[chunker]
     Chunker --> Indexer[indexer]
-    Indexer --> FAISS[(data/faiss_index)]
+    Indexer --> BGE[BGE 本地 embed]
+    BGE --> FAISS[(data/faiss_index)]
 
     Query[用户问题] --> Retriever[retriever]
     FAISS --> Retriever
     Retriever --> RAG[rag]
-    RAG --> LLM[DashScope LLM]
+    RAG --> LLM[DevAGI LLM]
     LLM --> Answer[答案 + 出处]
 ```
 
@@ -42,16 +48,18 @@ flowchart LR
 
 ```
 report-rag/
-├── main.py           # CLI 入口（index / ask）
-├── docs_loader.py    # PDF 按页读取
-├── chunker.py        # 文本切分
-├── indexer.py        # 向量化 + FAISS 建库/加载
-├── retriever.py      # 相似度检索
-├── rag.py            # RAG 问答（检索 + LLM）
+├── main.py              # CLI 入口（index / ask / eval）
+├── docs_loader.py       # PDF 按页读取
+├── chunker.py           # 文本切分
+├── indexer.py           # 向量化 + FAISS 建库/加载
+├── retriever.py         # 相似度检索（含 vectorstore 缓存）
+├── rag.py               # RAG 问答（检索 + LLM）
+├── eval.py              # 检索层测评
 ├── data/
-│   ├── raw_pdfs/     # 示例 PDF 文档
-│   └── faiss_index/  # 向量索引（运行 index 后生成，已 gitignore）
-├── .env.example      # 环境变量模板
+│   ├── raw_pdfs/        # 示例 PDF 文档
+│   ├── eval_cases.json  # 测评用例
+│   └── faiss_index/     # 向量索引（运行 index 后生成，已 gitignore）
+├── .env.example
 └── requirements.txt
 ```
 
@@ -60,33 +68,40 @@ report-rag/
 ### 1. 环境准备
 
 ```bash
-# 克隆仓库
 git clone https://github.com/jningc/report-rag
 cd report-rag
 
-# 创建虚拟环境（可选）
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-# 安装依赖
 pip install -r requirements.txt
 ```
 
-### 2. 配置 API Key
+首次建库会从 HuggingFace 下载 BGE 模型（约几百 MB）。网络不稳时可设镜像：
+
+```bash
+export HF_ENDPOINT=https://hf-mirror.com
+```
+
+### 2. 配置 LLM Key（仅 ask 需要）
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env`，填入 [DashScope API Key](https://dashscope.console.aliyun.com/)：
+编辑 `.env`，填入 [DevAGI](https://devcto.com) 的 Key 与端点：
 
 ```
-DASHSCOPE_API_KEY=your_api_key_here
+DEVAGI_API_KEY=your_devagi_api_key_here
+DEVAGI_BASE_URL=https://api.fe8.cn/v1
+DEVAGI_MODEL=gpt-3.5-turbo
 ```
+
+`index` 与 `eval` 不调用 LLM，可不配置 Key（Embedding 为本地 BGE）。
 
 ### 3. 建库
 
-将 PDF 放入 `data/raw_pdfs/`（仓库已附带示例文档），然后：
+PDF 已放在 `data/raw_pdfs/`，执行：
 
 ```bash
 python main.py index
@@ -95,7 +110,7 @@ python main.py index
 输出示例：
 
 ```
-共 20 页 → 45 块，开始入库…
+共 32 页 → 308 块，开始入库…
 已写入: .../data/faiss_index
 ```
 
@@ -106,30 +121,24 @@ python main.py ask "年假怎么请"
 python main.py ask "出差打车怎么报销" -k 5
 ```
 
-输出示例：
+### 5. 检索层测评
 
-```
-问题: 年假怎么请
-
-（LLM 根据检索到的制度片段生成的回答）
-
-引用出处:
-  - 03_leave_policy.pdf 第1页
+```bash
+python main.py eval
 ```
 
 ## CLI 用法
 
 ```bash
-# 查看帮助
 python main.py -h
 python main.py index -h
 python main.py ask -h
+python main.py eval -h
 
-# 从指定目录建库
 python main.py index --pdf-dir /path/to/pdfs
-
-# 问答，指定检索条数
 python main.py ask "餐饮报销有什么要求" -k 3
+python main.py eval -k 5
+python eval.py
 ```
 
 ## 模块说明
@@ -138,12 +147,13 @@ python main.py ask "餐饮报销有什么要求" -k 3
 |------|----------|------|
 | `docs_loader` | `load_pdfs(folder)` | 读取目录下所有 PDF，每页一条记录 |
 | `chunker` | `chunk_pages(pages)` | 按页切分，保留 source/page |
-| `indexer` | `build_index(chunks)` | embed + 写入 FAISS 并落盘 |
+| `indexer` | `build_index(chunks)` | BGE embed + 写入 FAISS 并落盘 |
 | `indexer` | `load_index()` | 从本地加载索引 |
-| `retriever` | `search(query, k=3)` | 相似度检索 top-k |
+| `retriever` | `search(query, k=3)` | 相似度检索 top-k（vectorstore 进程内缓存） |
 | `rag` | `ask(question, k=3)` | 完整 RAG，返回 answer + sources |
+| `eval` | `run_eval(k=3)` | 检索层测评，不调 LLM |
 
-各模块均可单独运行冒烟测试：
+各模块均可单独冒烟：
 
 ```bash
 python docs_loader.py
@@ -151,25 +161,20 @@ python chunker.py
 python indexer.py
 python retriever.py
 python rag.py
+python eval.py
 ```
 
 ## 数据格式
 
-流水线中统一使用 dict 传递，结构如下：
+流水线中统一使用 dict 传递：
 
 ```python
 {"source": "02_reimbursement.pdf", "page": 1, "text": "..."}
 ```
 
-- `source`：来源文件名
-- `page`：页码（从 1 开始）
-- `text`：该页或该 chunk 的正文
-
 页码随 metadata 写入 FAISS 的 `index.pkl`，检索时通过 `doc.metadata["page"]` 取回。
 
 ## 示例问题
-
-仓库示例文档可尝试以下问题：
 
 | 问题 | 预期相关文档 |
 |------|-------------|
@@ -178,17 +183,27 @@ python rag.py
 | IT 问题找谁 | `04_it_support.pdf` |
 | 产品常见问题 | `05_product_faq.pdf` |
 
+## 测评
+
+检索层自动测评（见 `data/eval_cases.json`），验证 **source 命中** 与 **相似度拒答**，与 `rag.py` 共用 `MIN_RELEVANCE_SCORE`，不调用 LLM。
+
+| 用例类型 | 通过条件 |
+|----------|----------|
+| 正常问题 | top-k 命中预期 PDF，且最高相关度 >= 阈值 |
+| 应拒答问题 | 无结果，或最高相关度 < 阈值 |
+
+阈值在 `rag.py` 的 `MIN_RELEVANCE_SCORE`（当前默认 `0.4`），换 embedding 模型后可能需要微调。
+
 ## 设计说明
 
-- **按页切分、不跨页**：牺牲少量上下文连贯性，换取页码出处准确
-- **Prompt 约束**：要求模型仅依据参考资料回答，不足时明确拒答
-- **索引与向量分离存储**：`index.faiss` 存向量，`index.pkl` 存原文与 metadata
+- **按页切分、不跨页**：保证页码出处准确
+- **本地 BGE + 云端 LLM**：建库/检索零 API 费用，仅生成答案消耗 LLM 额度
+- **拒答前置**：相关度不足时不调用 LLM，减少幻觉
+- **retriever 缓存**：同一进程内多次检索只加载 BGE/FAISS 一次
 
 ## 注意事项
 
-- 首次 `ask` 前必须先执行 `index` 建库
-- `data/faiss_index/` 已在 `.gitignore` 中，克隆后需本地重建索引
-- Embedding 与 LLM 均调用 DashScope API，会产生少量费用
-- **拒答**：检索无结果，或最高相关度低于 `MIN_RELEVANCE_SCORE`（默认 0.3）时不调用 LLM
-
-
+- 首次 `ask` / `eval` 前须先 `python main.py index`
+- 更换 embedding 模型后须删除 `data/faiss_index/` 并重建索引
+- `data/faiss_index/` 已在 `.gitignore`，克隆后需本地建库
+- DashScope 方案在 `indexer.py` / `rag.py` 中以注释保留，可切换回通义千问

@@ -3,5 +3,9 @@ pdfplumber
 langchain-text-splitters
 langchain-community
 langchain-core
+langchain-huggingface
+langchain-openai
 python-dotenv
 faiss-cpu
+sentence-transformers
+torch

@@ -1,0 +1,10 @@
+[
+  {"question": "年假怎么请", "expect_source": "03_leave_policy.pdf", "should_refuse": false},
+  {"question": "出差打车怎么报销", "expect_source": "02_reimbursement.pdf", "should_refuse": false},
+  {"question": "IT问题找谁", "expect_source": "04_it_support.pdf", "should_refuse": false},
+  {"question": "产品常见问题有哪些", "expect_source": "05_product_faq.pdf", "should_refuse": false},
+  {"question": "员工手册主要内容", "expect_source": "01_employee_handbook.pdf", "should_refuse": false},
+  {"question": "公司上市代码是多少", "should_refuse": true},
+  {"question": "今天天气怎么样", "should_refuse": true},
+  {"question": "火星上有员工吗", "should_refuse": true}
+]
