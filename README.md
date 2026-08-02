@@ -14,7 +14,7 @@
 - **拒答**：检索无结果或相关度过低时不调用 LLM
 - **检索层测评**：8 条固定用例自动验证命中与拒答
 - **CLI 入口**：`index` 建库 / `ask` 问答 / `eval` 测评
-- **Web 界面**：Streamlit 浏览器问答，侧边栏可调 top-k、一键试示例问题
+- **LangChain Tool**：`search_docs` 封装文档检索，可单独 `invoke` 或供 Agent 调用
 
 ## 技术栈
 
@@ -60,6 +60,7 @@ report-rag/
 ├── indexer.py           # 向量化 + FAISS 建库/加载
 ├── retriever.py         # 相似度检索 + get_retriever（LangChain 接口）
 ├── rag.py               # RAG 问答（LCEL Chain + ask）
+├── tools.py             # LangChain Tool（search_docs）
 ├── eval.py              # 检索层测评
 ├── data/
 │   ├── raw_pdfs/        # 示例 PDF 文档
@@ -196,6 +197,37 @@ ask(question)
 | `build_rag_chain(retriever, llm)` | 组装 LCEL 管道 |
 | `ask(question, k)` | 拒答 + `chain.invoke` + 返回 sources |
 
+## search_docs Tool
+
+将文档检索封装为 LangChain Tool，底层复用 `search_with_scores` + `format_docs`，与 `ask()` 共用拒答阈值。
+
+```python
+from tools import search_docs
+
+result = search_docs.invoke({"query": "出差打车怎么报销", "k": 3})
+print(result)
+```
+
+命令行冒烟：
+
+```bash
+python tools.py
+```
+
+返回示例：
+
+```
+[1] 来源: 02_reimbursement.pdf 第1页
+出差打车可按实报实销...
+```
+
+Tool 与 LCEL Chain 的关系：
+
+| 组件 | 作用 |
+|------|------|
+| LCEL Chain | `ask()` 固定流程：检索 → 生成 |
+| `search_docs` Tool | 独立检索能力，LLM/Agent 可按需调用 |
+
 ## 模块说明
 
 | 模块 | 核心函数 | 说明 |
@@ -209,6 +241,7 @@ ask(question)
 | `retriever` | `get_retriever(k=3)` | 返回 LangChain Retriever，供 LCEL 使用 |
 | `rag` | `build_rag_chain(retriever, llm)` | LCEL：检索 → prompt → LLM |
 | `rag` | `ask(question, k=3)` | 完整 RAG，返回 answer + sources |
+| `tools` | `search_docs(query, k=3)` | LangChain Tool，返回检索结果字符串 |
 | `eval` | `run_eval(k=3)` | 检索层测评，不调 LLM |
 
 各模块均可单独冒烟：
@@ -219,6 +252,7 @@ python chunker.py
 python indexer.py
 python retriever.py
 python rag.py
+python tools.py
 python eval.py
 ```
 
