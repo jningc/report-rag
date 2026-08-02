@@ -23,9 +23,15 @@ def _get_vectorstore(index_dir=DEFAULT_INDEX_DIR):
     global _vectorstore, _cached_index_dir
     index_dir_key = str(index_dir)
     if _vectorstore is None or _cached_index_dir != index_dir_key:
-        _vectorstore = load_index(index_dir=index_dir) #记下目录
+        _vectorstore = load_index(index_dir=index_dir)
         _cached_index_dir = index_dir_key
     return _vectorstore
+
+
+def get_retriever(k: int = 3, index_dir=DEFAULT_INDEX_DIR):
+    """返回 LangChain Retriever，供 LCEL Chain 使用。"""
+    vs = _get_vectorstore(index_dir=index_dir)
+    return vs.as_retriever(search_kwargs={"k": k})
 
 
 def search_with_scores(query: str, k: int = 3, index_dir=DEFAULT_INDEX_DIR):

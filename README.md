@@ -9,7 +9,7 @@
 - **PDF 按页解析**：保留文件名与页码，便于溯源
 - **按页切分**：chunk 不跨页合并，出处精确到页
 - **FAISS 向量库**：本地 BGE embedding 建库，支持持久化
-- **RAG 问答**：检索 top-k 相关片段，调用 LLM 生成回答
+- **RAG 问答**：LangChain LCEL 编排检索→生成主路径，调用 LLM 生成回答
 - **引用出处**：回答附带 `source` / `page`
 - **拒答**：检索无结果或相关度过低时不调用 LLM
 - **检索层测评**：8 条固定用例自动验证命中与拒答
@@ -25,6 +25,7 @@
 | Embedding | 本地 `BAAI/bge-small-zh-v1.5`（sentence-transformers） |
 | 向量库 | FAISS（LangChain 封装） |
 | LLM | DevAGI OpenAI 兼容 API（默认 `gpt-3.5-turbo`） |
+| RAG 编排 | LangChain LCEL（`retriever \| format_docs \| prompt \| llm`） |
 | Web UI | Streamlit（`app.py`） |
 
 Embedding 在本地运行，**建库与检索无需 API Key**；`ask` 仅 LLM 调用需要 DevAGI Key。
@@ -39,10 +40,12 @@ flowchart LR
     Indexer --> BGE[BGE 本地 embed]
     BGE --> FAISS[(data/faiss_index)]
 
-    Query[用户问题] --> Retriever[retriever]
-    FAISS --> Retriever
-    Retriever --> RAG[rag]
-    RAG --> LLM[DevAGI LLM]
+    Query[用户问题] --> Score[search_with_scores]
+    FAISS --> Score
+    Score -->|相关度够| Chain[LCEL Chain]
+    Score -->|拒答| Refuse[无法回答]
+    FAISS --> Chain
+    Chain --> LLM[DevAGI LLM]
     LLM --> Answer[答案 + 出处]
 ```
 
@@ -55,8 +58,8 @@ report-rag/
 ├── docs_loader.py       # PDF 按页读取
 ├── chunker.py           # 文本切分
 ├── indexer.py           # 向量化 + FAISS 建库/加载
-├── retriever.py         # 相似度检索（含 vectorstore 缓存）
-├── rag.py               # RAG 问答（检索 + LLM）
+├── retriever.py         # 相似度检索 + get_retriever（LangChain 接口）
+├── rag.py               # RAG 问答（LCEL Chain + ask）
 ├── eval.py              # 检索层测评
 ├── data/
 │   ├── raw_pdfs/        # 示例 PDF 文档
@@ -171,6 +174,28 @@ streamlit run app.py
 
 底层复用 `rag.ask()`，需配置 `DEVAGI_API_KEY`。
 
+## RAG 主路径（LangChain LCEL）
+
+`ask()` 对外接口不变，内部生成部分已改为 LangChain LCEL Chain：
+
+```
+ask(question)
+  ├─ search_with_scores     # 拒答判断 + 提取 sources（不调 LLM）
+  └─ chain.invoke(question) # LCEL 生成主路径
+       retriever | format_docs  →  context
+       RunnablePassthrough()    →  question
+       | RAG_PROMPT | llm | StrOutputParser()
+```
+
+核心函数：
+
+| 函数 | 说明 |
+|------|------|
+| `get_retriever(k)` | FAISS → LangChain Retriever |
+| `format_docs(docs)` | Document 列表 → prompt 参考资料字符串 |
+| `build_rag_chain(retriever, llm)` | 组装 LCEL 管道 |
+| `ask(question, k)` | 拒答 + `chain.invoke` + 返回 sources |
+
 ## 模块说明
 
 | 模块 | 核心函数 | 说明 |
@@ -180,6 +205,9 @@ streamlit run app.py
 | `indexer` | `build_index(chunks)` | BGE embed + 写入 FAISS 并落盘 |
 | `indexer` | `load_index()` | 从本地加载索引 |
 | `retriever` | `search(query, k=3)` | 相似度检索 top-k（vectorstore 进程内缓存） |
+| `retriever` | `search_with_scores(query, k=3)` | 带相关度分数的检索，供拒答判断 |
+| `retriever` | `get_retriever(k=3)` | 返回 LangChain Retriever，供 LCEL 使用 |
+| `rag` | `build_rag_chain(retriever, llm)` | LCEL：检索 → prompt → LLM |
 | `rag` | `ask(question, k=3)` | 完整 RAG，返回 answer + sources |
 | `eval` | `run_eval(k=3)` | 检索层测评，不调 LLM |
 
@@ -228,7 +256,8 @@ python eval.py
 
 - **按页切分、不跨页**：保证页码出处准确
 - **本地 BGE + 云端 LLM**：建库/检索零 API 费用，仅生成答案消耗 LLM 额度
-- **拒答前置**：相关度不足时不调用 LLM，减少幻觉
+- **LangChain LCEL 主路径**：`retriever | format_docs | prompt | llm` 标准编排检索→生成
+- **拒答前置**：`search_with_scores` 判定相关度，不足时不构建 Chain、不调用 LLM
 - **retriever 缓存**：同一进程内多次检索只加载 BGE/FAISS 一次
 
 ## 注意事项

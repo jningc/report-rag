@@ -4,6 +4,7 @@ __pycache__/
 data/faiss_index/
 practice_data/
 indexer_practice.py
+rag_practice.py
 .DS_Store
 *.faiss
 *.pkl
