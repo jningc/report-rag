@@ -7,25 +7,21 @@
 
 from indexer import DEFAULT_INDEX_DIR, load_index
 
-# 进程内缓存，避免本地 BGE 每次 search 重复加载
-_vectorstore = None        # 缓存：已加载的 FAISS 对象
-_cached_index_dir = None   # 记录当前缓存对应哪个索引目录
+# 按目录缓存：同一进程可同时持有主库 / v12 / v13，避免来回加载 BGE
+_vectorstores = {}
+
 
 def clear_cache():
-    """清空 vectorstore 缓存；重建索引后可调用。"""
-    global _vectorstore, _cached_index_dir
-    _vectorstore = None
-    _cached_index_dir = None
+    """清空全部目录的 vectorstore 缓存；重建索引后可调用。"""
+    _vectorstores.clear()
 
 
 def _get_vectorstore(index_dir=DEFAULT_INDEX_DIR):
-    """加载并缓存 FAISS vectorstore，同一 index_dir 只加载一次。"""
-    global _vectorstore, _cached_index_dir
+    """加载并缓存 FAISS vectorstore，每个 index_dir 只加载一次。"""
     index_dir_key = str(index_dir)
-    if _vectorstore is None or _cached_index_dir != index_dir_key:
-        _vectorstore = load_index(index_dir=index_dir)
-        _cached_index_dir = index_dir_key
-    return _vectorstore
+    if index_dir_key not in _vectorstores:
+        _vectorstores[index_dir_key] = load_index(index_dir=index_dir)
+    return _vectorstores[index_dir_key]
 
 
 def get_retriever(k: int = 3, index_dir=DEFAULT_INDEX_DIR):

@@ -16,6 +16,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
+from indexer import DEFAULT_INDEX_DIR
 from retriever import get_retriever, search_with_scores
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -100,12 +101,15 @@ def build_rag_chain(retriever, llm=None):
     )
 
 
-def ask(question: str, k: int = 3, model=None) -> dict:
-    """RAG 问答：拒答判断 → LCEL 生成 → 返回结构化结果。"""
+def ask(question: str, k: int = 3, model=None, index_dir=DEFAULT_INDEX_DIR) -> dict:
+    """RAG 问答：拒答判断 → LCEL 生成 → 返回结构化结果。
+
+    index_dir 指定检索库，默认主库，原有调用不用改。
+    """
     if not question.strip():
         raise ValueError("question 不能为空")
 
-    hits = search_with_scores(question, k=k)
+    hits = search_with_scores(question, k=k, index_dir=index_dir)
 
     if not hits or hits[0][1] < MIN_RELEVANCE_SCORE:
         return {
@@ -115,7 +119,10 @@ def ask(question: str, k: int = 3, model=None) -> dict:
         }
 
     docs = [doc for doc, _ in hits]
-    chain = build_rag_chain(get_retriever(k=k), llm=_get_llm(model=model))
+    chain = build_rag_chain(
+        get_retriever(k=k, index_dir=index_dir),
+        llm=_get_llm(model=model),
+    )
     answer = chain.invoke(question)
 
     return {
