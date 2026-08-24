@@ -1,0 +1,122 @@
+[
+  {
+    "id": "hotel_cap",
+    "question": "上海出差住了600一晚，能报多少？",
+    "old_conclusion": "可报上限500，超出自理",
+    "new_conclusion": "可报上限550，超出自理",
+    "should_flip": true,
+    "risk": "金额",
+    "old_cite": "v1.2 3.3",
+    "new_cite": "v1.3 3.3"
+  },
+  {
+    "id": "meal_after_hospitality",
+    "question": "当天客户宴请已经报了，出差餐补还有吗？",
+    "old_conclusion": "可以发放餐补",
+    "new_conclusion": "不再发放餐补",
+    "should_flip": true,
+    "risk": "可否报",
+    "old_cite": "v1.2 3.4",
+    "new_cite": "v1.3 3.4"
+  },
+  {
+    "id": "overtime_commute",
+    "question": "加班到晚上十一点，打车回家能报吗？",
+    "old_conclusion": "不可报，日常通勤费用明确不可报销",
+    "new_conclusion": "不可报，日常通勤费用明确不可报销",
+    "should_flip": false,
+    "risk": "不变",
+    "old_cite": "v1.2 2.2",
+    "new_cite": "v1.3 2.2"
+  },
+  {
+    "id": "invoice_title",
+    "question": "发票抬头写成我自己的名字，能报吗？",
+    "old_conclusion": "不可报，抬头必须是公司全称",
+    "new_conclusion": "不可报，抬头必须是公司全称",
+    "should_flip": false,
+    "risk": "不变",
+    "old_cite": "v1.2 8.1 / 12",
+    "new_cite": "v1.3 8.1 / 12"
+  },
+  {
+    "id": "bitcoin_out_of_policy",
+    "question": "比特币算不算报销科目？",
+    "old_conclusion": "制度外，拒答",
+    "new_conclusion": "制度外，拒答",
+    "should_flip": false,
+    "risk": "不变",
+    "old_cite": "两版均无此科目",
+    "new_cite": "两版均无此科目"
+  },
+  {
+    "id": "no_trip_apply",
+    "question": "没提出差申请就去了外地，住宿能报吗？",
+    "old_conclusion": "未申请的跨城差旅，财务可否决相关报销",
+    "new_conclusion": "未申请的跨城差旅，财务可否决相关报销",
+    "should_flip": false,
+    "risk": "手续",
+    "old_cite": "v1.2 3.1 / 12",
+    "new_cite": "v1.3 3.1 / 12"
+  },
+  {
+    "id": "duplicate_transport",
+    "question": "同一趟既打了车又想报油费或里程，行不行？",
+    "old_conclusion": "不可重复报销，不得与同一行程的网约车费重复报里程",
+    "new_conclusion": "不可重复报销，不得与同一行程的网约车费重复报里程",
+    "should_flip": false,
+    "risk": "可否报",
+    "old_cite": "v1.2 4.2 / 12",
+    "new_cite": "v1.3 4.2 / 12"
+  },
+  {
+    "id": "fuel_and_mileage",
+    "question": "自己开车出差，过路费和油费怎么报？",
+    "old_conclusion": "过路费凭发票可报，油费不单独报，走里程补贴",
+    "new_conclusion": "过路费凭发票可报，油费不单独报，走里程补贴",
+    "should_flip": false,
+    "risk": "金额",
+    "old_cite": "v1.2 3.2 / 4.2",
+    "new_cite": "v1.3 3.2 / 4.2"
+  },
+  {
+    "id": "purchase_over_500",
+    "question": "买了600块键盘，直接贴票报行吗？",
+    "old_conclusion": "单笔超过500须先走采购系统，不能直接贴票",
+    "new_conclusion": "单笔超过500须先走采购系统，不能直接贴票",
+    "should_flip": false,
+    "risk": "手续",
+    "old_cite": "v1.2 6 / 12",
+    "new_cite": "v1.3 6 / 12"
+  },
+  {
+    "id": "thirty_day_window",
+    "question": "上个月的票，现在还能报吗？",
+    "old_conclusion": "费用发生之日起30个自然日内提交，逾期须符合延期规则",
+    "new_conclusion": "费用发生之日起30个自然日内提交，逾期须符合延期规则",
+    "should_flip": false,
+    "risk": "手续",
+    "old_cite": "v1.2 9.2",
+    "new_cite": "v1.3 9.2"
+  },
+  {
+    "id": "vague_meal",
+    "question": "我昨天吃了顿饭，能报销吗？",
+    "old_conclusion": "缺槽：未说明因公/招待/是否申请，不能编造结论",
+    "new_conclusion": "缺槽：未说明因公/招待/是否申请，不能编造结论",
+    "should_flip": false,
+    "risk": "不变",
+    "old_cite": "两版均须因公且招待须事先申请",
+    "new_cite": "两版均须因公且招待须事先申请"
+  },
+  {
+    "id": "third_party_paid",
+    "question": "客户已经付过的餐费，我再报一次可以吗？",
+    "old_conclusion": "不可报，已由客户或第三方承担并已付款的费用不能报",
+    "new_conclusion": "不可报，已由客户或第三方承担并已付款的费用不能报",
+    "should_flip": false,
+    "risk": "可否报",
+    "old_cite": "v1.2 2.2",
+    "new_cite": "v1.3 2.2"
+  }
+]
