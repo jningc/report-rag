@@ -8,10 +8,12 @@
 """
 
 import json
+import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_CASES_FILE = PROJECT_ROOT / "data" / "eval_impact.json"
+LAST_RESULTS_FILE = PROJECT_ROOT / "data" / "impact_last.json"
 
 # 旧版 / 新版各一份报销 PDF，分别入库，不要混进请假 / IT / FAQ
 OLD_PDF = PROJECT_ROOT / "data" / "raw_pdfs_v12" / "02_reimbursement_v12.pdf"
@@ -23,6 +25,18 @@ NEW_SOURCE = "02_reimbursement.pdf"
 
 # 制度外、缺槽允许两库都拒答，不记进检索偏题清单
 ALLOW_MISS_IDS = {"bitcoin_out_of_policy", "vague_meal"}
+
+# 演示四题：两题该变、两题没变
+DEMO_IDS = ["hotel_cap", "meal_after_hospitality", "overtime_commute", "invoice_title"]
+SHORT_PREFIX = "结论："
+# 与 rag.SYSTEM_PROMPT 五种短结论对齐
+KIND_ALLOW = "可报"
+KIND_CAP = "可报上限"
+KIND_DENY = "不可报"
+KIND_COND = "条件分支"
+KIND_REFUSE = "拒答"
+# 可报上限：允许空格和「元」，数字才进 amount
+_CAP_RE = re.compile(r"^可报上限\s*(\d+)\s*元?")
 
 
 def load_cases(cases_file=DEFAULT_CASES_FILE) -> list[dict]:
@@ -70,11 +84,93 @@ def _retrieval_ok(case: dict, sources: list[dict], expect_name: str) -> bool:
     return (not sources) and case["id"] in ALLOW_MISS_IDS
 
 
+def _first_line_body(answer: str) -> str:
+    """取第一行、去掉「结论：」前缀，供解析；不在这里删全部空白。"""
+    # 与 rag.REFUSE_ANSWER 同文；此处不 import rag，对照测试不加载 LLM 依赖
+    refuse = "根据现有资料无法回答。"
+    text = (answer or "").strip()
+    if not text:
+        return ""
+    if text == refuse or text.startswith(refuse):
+        return KIND_REFUSE
+    first = text.splitlines()[0].strip().rstrip("。.;；")
+    if first.startswith(SHORT_PREFIX):
+        first = first[len(SHORT_PREFIX):].strip()
+    return first
+
+
+def parse_short_conclusion(answer: str) -> dict:
+    """把短结论解析成 kind / amount，对照只比这两个槽。"""
+    first = _first_line_body(answer)
+    if not first:
+        return {"kind": "", "amount": None}
+    if first == KIND_REFUSE or first.startswith(KIND_REFUSE):
+        return {"kind": KIND_REFUSE, "amount": None}
+    cap = _CAP_RE.match(first)
+    if cap:
+        return {"kind": KIND_CAP, "amount": int(cap.group(1))}
+    if first.startswith(KIND_DENY):
+        return {"kind": KIND_DENY, "amount": None}
+    if first.startswith(KIND_COND):
+        return {"kind": KIND_COND, "amount": None}
+    if first.startswith(KIND_ALLOW):
+        return {"kind": KIND_ALLOW, "amount": None}
+    return {"kind": "".join(first.split()), "amount": None}
+
+
+def format_short_conclusion(parsed: dict) -> str:
+    """展示用规范短句；上限只保留数字，不带「元」。"""
+    kind = parsed.get("kind") or ""
+    amount = parsed.get("amount")
+    if kind == KIND_CAP and amount is not None:
+        return f"{KIND_CAP}{amount}"
+    return kind
+
+
+def extract_short_conclusion(answer: str) -> str:
+    """第一行短结论的规范展示串，供界面和落盘。"""
+    return format_short_conclusion(parse_short_conclusion(answer))
+
+
+def conclusions_flipped(old_parsed: dict, new_parsed: dict) -> bool:
+    """仅当 kind 或 amount 不同时视为翻转。"""
+    return (old_parsed.get("kind"), old_parsed.get("amount")) != (
+        new_parsed.get("kind"),
+        new_parsed.get("amount"),
+    )
+
+
+def score_flip(old_text: str, new_text: str, should_flip: bool) -> bool:
+    """字段对齐：两版是否变化 与 should_flip 一致即算过。"""
+    return conclusions_flipped(
+        parse_short_conclusion(old_text),
+        parse_short_conclusion(new_text),
+    ) == should_flip
+
+
+def impact_indexes_ready() -> bool:
+    """两个影响面索引是否都已建好。"""
+    return (OLD_INDEX_DIR / "index.faiss").exists() and (NEW_INDEX_DIR / "index.faiss").exists()
+
+
+def save_last_results(rows: list[dict], path=LAST_RESULTS_FILE):
+    """把最近一次对照结果写成 JSON，供界面直接展示。"""
+    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def load_last_results(path=LAST_RESULTS_FILE) -> list[dict] | None:
+    """读取最近一次对照结果；没有文件则返回 None。"""
+    if not path.exists():
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def run_impact(k: int = 3, cases_file=DEFAULT_CASES_FILE) -> list[dict]:
-    """对两库各 ask 一次，打印对照表并返回行数据。本批不做自动判分。"""
+    """对两库各 ask 一次，打印对照表，用短结论对齐 should_flip。"""
     from rag import ask
 
-    if not OLD_INDEX_DIR.exists() or not NEW_INDEX_DIR.exists():
+    if not impact_indexes_ready():
         raise FileNotFoundError(
             f"影响面索引不存在。请先运行: python main.py index-impact\n"
             f"  旧库: {OLD_INDEX_DIR}\n"
@@ -94,6 +190,12 @@ def run_impact(k: int = 3, cases_file=DEFAULT_CASES_FILE) -> list[dict]:
         old_ok = _retrieval_ok(case, old_result["sources"], OLD_SOURCE)
         new_ok = _retrieval_ok(case, new_result["sources"], NEW_SOURCE)
         flip_label = "该变" if case["should_flip"] else "不该变"
+        old_parsed = parse_short_conclusion(old_result["answer"])
+        new_parsed = parse_short_conclusion(new_result["answer"])
+        old_short = format_short_conclusion(old_parsed)
+        new_short = format_short_conclusion(new_parsed)
+        flipped = conclusions_flipped(old_parsed, new_parsed)
+        aligned = flipped == case["should_flip"]
 
         row = {
             "id": case["id"],
@@ -104,6 +206,10 @@ def run_impact(k: int = 3, cases_file=DEFAULT_CASES_FILE) -> list[dict]:
             "new_conclusion": case["new_conclusion"],
             "old_answer": old_result["answer"],
             "new_answer": new_result["answer"],
+            "old_short": old_short,
+            "new_short": new_short,
+            "flipped": flipped,
+            "aligned": aligned,
             "old_sources": old_result["sources"],
             "new_sources": new_result["sources"],
             "old_retrieval_ok": old_ok,
@@ -116,6 +222,9 @@ def run_impact(k: int = 3, cases_file=DEFAULT_CASES_FILE) -> list[dict]:
         print(f"问: {question}")
         print(f"标注旧结论: {case['old_conclusion']}")
         print(f"标注新结论: {case['new_conclusion']}")
+        print(f"短结论旧: {old_short}")
+        print(f"短结论新: {new_short}")
+        print(f"对齐: {'过' if aligned else '未过'}（标注{flip_label}，实判{'变了' if flipped else '没变'}）")
         print(f"旧答: {old_result['answer']}")
         print(f"新答: {new_result['answer']}")
         print(f"出处旧: {_format_sources(old_result['sources'])}")
@@ -128,16 +237,19 @@ def run_impact(k: int = 3, cases_file=DEFAULT_CASES_FILE) -> list[dict]:
         if not new_ok:
             miss_list.append(f"{case['id']} 新库 出处={_format_sources(new_result['sources'])}")
 
+    n_flip = sum(1 for r in rows if r["should_flip"])
+    n_ok = sum(1 for r in rows if r["aligned"])
     print("=" * 72)
-    print(f"\n共 {len(rows)} 题。该变 {sum(1 for r in rows if r['should_flip'])} 题，"
-          f"不该变 {sum(1 for r in rows if not r['should_flip'])} 题。")
-    print("本批不自动判生成对错，请先看住宿、餐补是否变了，通勤是否没变。")
+    print(f"\n共 {len(rows)} 题。该变 {n_flip} 题，不该变 {len(rows) - n_flip} 题。")
+    print(f"短结论对齐 {n_ok}/{len(rows)} 题（should_flip 对上算过）。")
     if miss_list:
         print("\n检索偏题/未命中清单（本批不上父文档、不改写查询）：")
         for item in miss_list:
             print(f"  - {item}")
     else:
         print("\n检索全部落到对应报销稿（或制度外/缺槽按约定拒答）。")
+    save_last_results(rows)
+    print(f"已写入: {LAST_RESULTS_FILE}")
     return rows
 
 

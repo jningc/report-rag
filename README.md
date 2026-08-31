@@ -1,11 +1,15 @@
 # report-rag
 
-模拟企业内部制度知识库：基于 PDF 制度文档，实现 **解析 → 分块 → 向量检索 → 带出处回答** 的 RAG 问答系统。覆盖报销、请假、IT 支持、产品 FAQ 等场景。数据为自建可公开复现材料，非真实公司机密。
+财务改完报销制度后，把员工常问的题对旧版、新版各问一遍，列出哪些答案换成了另一套数。那张「变了 / 没变」清单就是交付物。
+
+演示数据为自建可公开复现材料，**不是真审批**，也非真实公司机密。底层仍是 PDF 制度的解析 → 分块 → 向量检索 → 带出处回答；聊天只是尺子，主界面是口径对照表。
 
 仓库地址：<https://github.com/jningc/report-rag>
 
 ## 功能特性
 
+- **制度变更影响面**：同一批题对 v1.2 / v1.3 报销稿各问一遍，打出变了 / 没变清单
+- **短结论对齐**：回答先给可报 / 不可报 / 条件分支 / 拒答，`should_flip` 对上算过
 - **PDF 按页解析**：保留文件名与页码，便于溯源
 - **按页切分**：chunk 不跨页合并，出处精确到页
 - **FAISS 向量库**：本地 BGE embedding 建库，支持持久化
@@ -13,7 +17,7 @@
 - **引用出处**：回答附带 `source` / `page`
 - **拒答**：检索无结果或相关度过低时不调用 LLM
 - **检索层测评**：8 条固定用例自动验证命中与拒答
-- **CLI 入口**：`index` 建库 / `ask` 问答 / `eval` 测评
+- **CLI 入口**：`index` 建库 / `ask` 问答 / `eval` 测评 / `index-impact` 双库 / `impact` 对照
 - **LangChain Tool**：`search_docs` 封装文档检索，可单独 `invoke` 或供 Agent 调用
 
 ## 技术栈
@@ -53,8 +57,9 @@ flowchart LR
 
 ```
 report-rag/
-├── main.py              # CLI 入口（index / ask / eval）
-├── app.py               # Streamlit Web 问答界面
+├── main.py              # CLI 入口（index / ask / eval / index-impact / impact）
+├── app.py               # Streamlit：第一屏对照表，第二页单题问答
+├── impact.py            # 同一批题对两库各问一遍，打出对照表
 ├── docs_loader.py       # PDF 按页读取
 ├── chunker.py           # 文本切分
 ├── indexer.py           # 向量化 + FAISS 建库/加载
@@ -63,9 +68,13 @@ report-rag/
 ├── tools.py             # LangChain Tool（search_docs）
 ├── eval.py              # 检索层测评
 ├── data/
-│   ├── raw_pdfs/        # 示例 PDF 文档
-│   ├── eval_cases.json  # 测评用例
-│   └── faiss_index/     # 向量索引（运行 index 后生成，已 gitignore）
+│   ├── raw_pdfs/        # 现行制度 PDF（报销为 v1.3）
+│   ├── raw_pdfs_v12/    # 旧版报销稿，不进主库
+│   ├── eval_cases.json  # 检索层测评用例
+│   ├── eval_impact.json # 影响面题集
+│   ├── faiss_index/     # 主库（运行 index 后生成）
+│   ├── faiss_index_v12/ # 旧版报销库
+│   └── faiss_index_v13/ # 新版报销库
 ├── .env.example
 └── requirements.txt
 ```
@@ -134,15 +143,24 @@ python main.py ask "出差打车怎么报销" -k 5
 python main.py eval
 ```
 
-### 6. Web 界面（Streamlit）
+### 6. 影响面对照（旧版 / 新版报销稿）
 
-建库并配置好 `.env` 后，启动浏览器问答：
+```bash
+python main.py index-impact
+python main.py impact
+```
+
+同一批题对 `faiss_index_v12`（v1.2）和 `faiss_index_v13`（v1.3）各问一遍，打出变了 / 没变清单。v1.2 PDF 单独放在 `data/raw_pdfs_v12/`，不会打进主库。
+
+### 7. Web 界面（Streamlit）
+
+建库并配置好 `.env` 后：
 
 ```bash
 streamlit run app.py
 ```
 
-默认地址：<http://localhost:8501>。界面支持输入问题、调节检索条数（top-k），侧边栏提供示例问题一键提问；回答与 CLI 一致，附带引用出处。
+默认地址：<http://localhost:8501>。打开先看到对照表，不是聊天框；点开一题看旧答、新答、出处版本。单题问答在第二页，当尺子。侧边栏四题：住宿上限、招待后餐补、加班打车、发票抬头。
 
 首次运行 Streamlit 可能在终端询问邮箱，直接按 Enter 跳过即可。
 
@@ -153,6 +171,8 @@ python main.py -h
 python main.py index -h
 python main.py ask -h
 python main.py eval -h
+python main.py index-impact
+python main.py impact -k 3
 
 python main.py index --pdf-dir /path/to/pdfs
 python main.py ask "餐饮报销有什么要求" -k 3
@@ -168,12 +188,14 @@ streamlit run app.py
 
 | 功能 | 说明 |
 |------|------|
-| 问题输入 | 主区域文本框 +「提问」按钮 |
+| 影响面对照 | 第一屏：该变 / 没变清单，点开看旧答、新答、出处 |
+| 运行对照 | 对两库各问一遍；也可先跑 `python main.py impact` |
+| 单题问答 | 第二页，当尺子，不当主产品 |
 | 检索条数 | 侧边栏 slider 调节 top-k（1–10） |
-| 示例问题 | 侧边栏一键填入并提问 |
-| 索引检查 | 未建库时页面提示执行 `python main.py index` |
+| 演示四题 | 侧边栏：住宿 600、招待后餐补、加班打车、发票抬头 |
+| 索引检查 | 未建影响面库时提示执行 `python main.py index-impact` |
 
-底层复用 `rag.ask()`，需配置 `DEVAGI_API_KEY`。
+底层复用 `rag.ask()`，需配置 `DEVAGI_API_KEY`。演示数据，不是真审批。
 
 ## RAG 主路径（LangChain LCEL）
 
@@ -243,6 +265,7 @@ Tool 与 LCEL Chain 的关系：
 | `rag` | `ask(question, k=3)` | 完整 RAG，返回 answer + sources |
 | `tools` | `search_docs(query, k=3)` | LangChain Tool，返回检索结果字符串 |
 | `eval` | `run_eval(k=3)` | 检索层测评，不调 LLM |
+| `impact` | `run_impact(k=3)` | 两库对照，短结论对齐 should_flip |
 
 各模块均可单独冒烟：
 
@@ -254,6 +277,7 @@ python retriever.py
 python rag.py
 python tools.py
 python eval.py
+python impact.py
 ```
 
 ## 数据格式
@@ -268,12 +292,14 @@ python eval.py
 
 ## 示例问题
 
-| 问题 | 预期相关文档 |
-|------|-------------|
-| 年假怎么请 | `03_leave_policy.pdf` |
-| 出差打车怎么报销 | `02_reimbursement.pdf` |
-| IT 问题找谁 | `04_it_support.pdf` |
-| 产品常见问题 | `05_product_faq.pdf` |
+演示四题（影响面主路径）：
+
+| 问题 | 标注 |
+|------|------|
+| 上海出差住了600一晚，能报多少？ | 该变（500 → 550） |
+| 当天客户宴请已经报了，出差餐补还有吗？ | 该变（有 → 没有） |
+| 加班到晚上十一点，打车回家能报吗？ | 没变（都不能报） |
+| 发票抬头写成我自己的名字，能报吗？ | 没变（抬头必须公司全称） |
 
 ## 测评
 
@@ -296,7 +322,8 @@ python eval.py
 
 ## 注意事项
 
-- 首次 `ask` / `eval` / Web 界面前须先 `python main.py index`
-- 更换 embedding 模型后须删除 `data/faiss_index/` 并重建索引
-- `data/faiss_index/` 已在 `.gitignore`，克隆后需本地建库
+- 影响面对照前须先 `python main.py index-impact`；主库问答前须先 `python main.py index`
+- 更换 embedding 模型后须删除对应 `data/faiss_index*` 并重建索引
+- `data/faiss_index/`、`data/faiss_index_v12/`、`data/faiss_index_v13/` 已在 `.gitignore`，克隆后需本地建库
+- 本仓库是演示数据，不是真审批
 - DashScope 方案在 `indexer.py` / `rag.py` 中以注释保留，可切换回通义千问
