@@ -6,6 +6,7 @@ CLI 入口：建库 / 问答 / 影响面对照
   python main.py ask "年假怎么请"    # RAG 问答
   python main.py index-impact       # 旧/新报销稿各建一个库
   python main.py impact             # 同一批题对两库各问一遍
+  python main.py impact --offline   # 读 impact_last.json 重算，不调 LLM
 """
 
 import argparse
@@ -65,10 +66,10 @@ def cmd_index_impact(args):
 
 
 def cmd_impact(args):
-    """同一批题对两库各问一遍，打印对照表。"""
+    """同一批题对两库各问一遍，或离线重算对照。"""
     from impact import run_impact
 
-    run_impact(k=args.k)
+    run_impact(k=args.k, offline=args.offline)
 
 
 def main():
@@ -107,6 +108,11 @@ def main():
 # 子命令 impact
     p_impact = sub.add_parser("impact", help="同一批题对两库各问一遍，打出对照表")
     p_impact.add_argument("-k", type=int, default=3, help="检索条数，默认 3")
+    p_impact.add_argument(
+        "--offline",
+        action="store_true",
+        help="读取 data/impact_last.json 重算三层分数，不调用 LLM",
+    )
     p_impact.set_defaults(func=cmd_impact)
 
     args = parser.parse_args()

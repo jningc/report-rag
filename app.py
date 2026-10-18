@@ -13,6 +13,7 @@ from impact import (
     DEMO_IDS,
     LAST_RESULTS_FILE,
     _format_sources,
+    align_label,
     impact_indexes_ready,
     load_cases,
     load_last_results,
@@ -65,6 +66,8 @@ def _merge_display_rows() -> list[dict]:
                 "new_short": saved.get("new_short"),
                 "flipped": saved.get("flipped"),
                 "aligned": saved.get("aligned"),
+                "retrieval_ok": saved.get("retrieval_ok"),
+                "schema_ok": saved.get("schema_ok"),
                 "old_sources": saved.get("old_sources") or [],
                 "new_sources": saved.get("new_sources") or [],
             })
@@ -92,7 +95,7 @@ def _render_row_detail(row: dict, expanded: bool) -> None:
             st.caption(
                 f"短结论：{row.get('old_short') or '（空）'} → "
                 f"{row.get('new_short') or '（空）'}　"
-                f"对齐：{'过' if row.get('aligned') else '未过'}"
+                f"对齐：{align_label(row.get('aligned'))}"
             )
         col_old, col_new = st.columns(2)
         with col_old:
@@ -120,12 +123,16 @@ def _render_impact_table() -> None:
     other_rows = [r for r in rows if r["id"] not in DEMO_IDS]
     n_flip = sum(1 for r in rows if r["should_flip"])
     has_run = LAST_RESULTS_FILE.exists()
-    n_aligned = sum(1 for r in rows if r.get("aligned")) if has_run else None
+    n_schema = sum(1 for r in rows if r.get("schema_ok")) if has_run else None
+    n_aligned = sum(1 for r in rows if r.get("aligned") is True) if has_run else None
 
     c1, c2, c3 = st.columns(3)
     c1.metric("该变", f"{n_flip} 题")
     c2.metric("没变", f"{len(rows) - n_flip} 题")
-    c3.metric("短结论对齐", f"{n_aligned}/{len(rows)}" if n_aligned is not None else "未跑")
+    c3.metric(
+        "翻转对齐",
+        f"{n_aligned}/{n_schema}" if n_aligned is not None else "未跑",
+    )
 
     st.markdown(
         "演示只看下面四行：**住宿、餐补该变；通勤、抬头没变。** "
