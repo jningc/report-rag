@@ -60,8 +60,7 @@ tender/              核对主路径（解析 → 切章 → 按章检索 → �
   ask_box.py         提问框，最多 5 步工具循环
   llm.py             对话模型客户端
 sample/              虚构 company.yaml，样本 PDF 下载说明
-docs/                方案、效果演示、笔记
-archive/policy-impact/  旧的报销影响面 RAG（tag v-impact-baseline）
+docs/                方案、效果演示
 data/                运行时索引和上传缓存（不进 Git）
 ```
 
@@ -69,4 +68,4 @@ data/                运行时索引和上传缓存（不进 Git）
 
 扫描件 OCR、Word 招标文件、工程量清单、围串标、资质在线验真、自动写技术方案正文。
 
-旧的报销制度影响面对照已移到 `archive/policy-impact/`，不再是主路径。
+旧的报销制度影响面对照不在本分支。完整代码在 tag `v-impact-baseline` 和分支 `feat/policy-impact`。
