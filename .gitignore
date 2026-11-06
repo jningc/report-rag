@@ -11,3 +11,5 @@ sample/*.pdf
 *.pkl
 .mcp.json
 .vscode/
+data/tender_last_company.yaml
+data/tender_upload.pdf

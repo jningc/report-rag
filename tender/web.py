@@ -31,7 +31,7 @@ from tender.workflow import run_check
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE_PDF = ROOT / "sample" / "beijing_road.pdf"
 SAMPLE_COMPANY = ROOT / "sample" / "company.yaml"
-PAGE = ROOT / "docs" / "效果演示.html"
+PAGE = ROOT / "效果演示.html"
 VENDOR = ROOT / "docs" / "vendor"
 UPLOAD_ROOT = ROOT / "data" / "web_jobs"
 
