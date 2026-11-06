@@ -20,7 +20,8 @@ from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
-from starlette.routing import Route
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
 
 from tender.ask_box import ask_question
 from tender.parse import render_page_png
@@ -31,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SAMPLE_PDF = ROOT / "sample" / "beijing_road.pdf"
 SAMPLE_COMPANY = ROOT / "sample" / "company.yaml"
 PAGE = ROOT / "docs" / "效果演示.html"
+VENDOR = ROOT / "docs" / "vendor"
 UPLOAD_ROOT = ROOT / "data" / "web_jobs"
 
 # 页面顶部进度条的固定顺序
@@ -262,6 +264,23 @@ async def job_state(request: Request):
     return Json(payload)
 
 
+async def job_pdf(request: Request):
+    """把当前任务的招标 PDF 原件交给浏览器渲染。"""
+    job_id = request.path_params["job_id"]
+    with _lock:
+        job = _jobs.get(job_id)
+        pdf_path = job["pdf_path"] if job else ""
+        file_name = job["file_name"] if job else "tender.pdf"
+    if not pdf_path:
+        return Json({"error": "任务不存在"}, status_code=404)
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=file_name,
+        content_disposition_type="inline",
+    )
+
+
 async def page_png(request: Request):
     """按页渲 PNG。有 bbox 时在原件上画黄框。"""
     job_id = request.path_params["job_id"]
@@ -360,8 +379,10 @@ app = Starlette(
         Route("/api/check", start_upload, methods=["POST"]),
         Route("/api/check/sample", start_sample, methods=["POST"]),
         Route("/api/jobs/{job_id}", job_state, methods=["GET"]),
+        Route("/api/jobs/{job_id}/file", job_pdf, methods=["GET"]),
         Route("/api/jobs/{job_id}/pages/{page:int}", page_png, methods=["GET"]),
         Route("/api/jobs/{job_id}/ask", ask, methods=["POST"]),
         Route("/api/jobs/{job_id}/export.xlsx", export_xlsx, methods=["GET"]),
+        Mount("/vendor", app=StaticFiles(directory=str(VENDOR))),
     ]
 )
