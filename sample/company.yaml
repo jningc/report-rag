@@ -1,0 +1,23 @@
+# 虚构公司，只用来对照招标文件。不对应任何真实企业。
+name: 示例监理有限公司
+years: 8
+qualifications:
+  - name: 市政公用工程监理乙级
+    valid_to: "2028-03-01"
+director:
+  name: 张某
+  license: 注册监理工程师
+  major: 房屋建筑工程
+  appointment_letter: false
+  same_employer: true
+performance:
+  - name: 某区道路大修监理
+    year: 2024
+    as_director: true
+sme: small
+deposit_ready: false
+systems:
+  - 质量管理体系认证
+  - 环境管理体系认证
+quote_wan: 45
+joint_venture: false

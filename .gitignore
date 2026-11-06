@@ -5,6 +5,9 @@ data/faiss_index/
 data/faiss_index_v12/
 data/faiss_index_v13/
 data/impact_last.json
+data/tender_index/
+data/tender_last.json
+sample/*.pdf
 practice_data/
 indexer_practice.py
 rag_practice.py
@@ -12,3 +15,4 @@ rag_practice.py
 *.faiss
 *.pkl
 .mcp.json
+.vscode/

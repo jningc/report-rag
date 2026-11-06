@@ -1,244 +1,206 @@
 """
-Streamlit Web 界面：制度变更影响面
-
-第一屏是旧版 / 新版对照表；单题问答在第二页，当尺子。
-
-用法:
-  streamlit run app.py
+招标文件核对界面：左表右页图，解析文本为第二档。
 """
 
+from io import BytesIO
+from pathlib import Path
+
 import streamlit as st
+import yaml
+from openpyxl import Workbook
 
-from impact import (
-    DEMO_IDS,
-    LAST_RESULTS_FILE,
-    _format_sources,
-    align_label,
-    impact_indexes_ready,
-    load_cases,
-    load_last_results,
-    run_impact,
-)
-from indexer import DEFAULT_INDEX_DIR
-from rag import ask
+from tender.parse import render_page_png
+from tender.sections import TYPE_LABEL
+from tender.tools import set_context
+from tender.workflow import print_tables, run_check
 
-# 侧边栏只放演示四题，请假 / IT / FAQ 不出现
-_CASES_BY_ID = {c["id"]: c for c in load_cases()}
-DEMO_QUESTIONS = [(i, _CASES_BY_ID[i]["question"]) for i in DEMO_IDS]
+SAMPLE = {
+    "东城道路监理": "sample/beijing_road.pdf",
+    "崇左国土绿化": "sample/chongzuo_green.pdf",
+    "温岭雪亮工程": "sample/wenling_video.pdf",
+}
 
-
-def _main_index_ready() -> bool:
-    """检查主库 FAISS 索引是否已建。"""
-    return (DEFAULT_INDEX_DIR / "index.faiss").exists()
-
-
-def _render_result(result: dict) -> None:
-    """展示问答结果。"""
-    st.subheader("回答")
-    st.markdown(result["answer"])
-
-    if result["sources"]:
-        st.subheader("引用出处")
-        for s in result["sources"]:
-            st.markdown(f"- **{s['source']}** 第 {s['page']} 页")
+TABS = [
+    ("feibiao", "废标对照"),
+    ("pingfen", "评分对照"),
+    ("cailiao", "材料对照"),
+    ("kongwei", "空位对照"),
+    ("shijian", "时间节点"),
+    ("hetong", "合同要点"),
+]
 
 
-def _merge_display_rows() -> list[dict]:
-    """题集为底，若有最近一次对照结果则叠上旧答 / 新答。"""
-    cases = load_cases()
-    last = {r["id"]: r for r in (load_last_results() or [])}
-    rows = []
-    for case in cases:
-        row = {
-            "id": case["id"],
-            "question": case["question"],
-            "should_flip": case["should_flip"],
-            "risk": case["risk"],
-            "old_conclusion": case["old_conclusion"],
-            "new_conclusion": case["new_conclusion"],
-        }
-        saved = last.get(case["id"])
-        if saved:
-            row.update({
-                "old_answer": saved.get("old_answer"),
-                "new_answer": saved.get("new_answer"),
-                "old_short": saved.get("old_short"),
-                "new_short": saved.get("new_short"),
-                "flipped": saved.get("flipped"),
-                "aligned": saved.get("aligned"),
-                "retrieval_ok": saved.get("retrieval_ok"),
-                "schema_ok": saved.get("schema_ok"),
-                "old_sources": saved.get("old_sources") or [],
-                "new_sources": saved.get("new_sources") or [],
-            })
-        rows.append(row)
-    return rows
+def _verdict_style(v: str) -> str:
+    if v == "不满足":
+        return "不满足"
+    if v == "满足":
+        return "满足"
+    if v == "无须提供":
+        return "无须提供"
+    return "人工看"
 
 
-def _flip_label(should_flip: bool) -> str:
-    return "该变" if should_flip else "没变"
-
-
-def _render_row_detail(row: dict, expanded: bool) -> None:
-    """点开一题看旧答、新答、出处版本。"""
-    title = f"{_flip_label(row['should_flip'])} · {row['risk']} · {row['question']}"
-    with st.expander(title, expanded=expanded):
-        st.caption(
-            f"标注旧结论：{row['old_conclusion']}  |  "
-            f"标注新结论：{row['new_conclusion']}"
-        )
-        has_answers = bool(row.get("old_answer") or row.get("new_answer"))
-        if not has_answers:
-            st.info("尚未生成两库回答。点击上方「运行对照」后即可看到旧答、新答。")
-            return
-        if row.get("old_short") is not None:
-            st.caption(
-                f"短结论：{row.get('old_short') or '（空）'} → "
-                f"{row.get('new_short') or '（空）'}　"
-                f"对齐：{align_label(row.get('aligned'))}"
+def _export_xlsx(result: dict) -> bytes:
+    wb = Workbook()
+    first = True
+    for key, title in TABS:
+        ws = wb.active if first else wb.create_sheet(title)
+        if first:
+            ws.title = title
+            first = False
+        rows = result.get(key) or []
+        if not rows:
+            ws.append(["空"])
+            continue
+        cols = [c for c in rows[0].keys() if c != "refs"]
+        ws.append(cols + ["出处"])
+        for row in rows:
+            src = "；".join(
+                f"p.{r.get('page')} {r.get('chapter')}"
+                for r in (row.get("refs") or [])
+                if r.get("page")
             )
-        col_old, col_new = st.columns(2)
-        with col_old:
-            st.markdown("**旧版 v1.2**")
-            st.markdown(row.get("old_answer") or "")
-            st.caption(f"出处：{_format_sources(row.get('old_sources') or [])}")
-        with col_new:
-            st.markdown("**新版 v1.3**")
-            st.markdown(row.get("new_answer") or "")
-            st.caption(f"出处：{_format_sources(row.get('new_sources') or [])}")
+            ws.append([str(row.get(c, "")) for c in cols] + [src])
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
 
 
-def _render_impact_table() -> None:
-    """第一屏：变了 / 没变清单。"""
-    if not impact_indexes_ready():
-        st.error(
-            "影响面索引不存在，请先在终端执行：\n\n"
-            "`python main.py index-impact`"
-        )
+def _show_refs(pdf_path: str, refs: list, mode: str) -> None:
+    usable = [r for r in refs if r.get("page")]
+    if not usable:
+        st.info("没有页码或块坐标，标「人工看」，不翻页、不画框。")
         return
-
-    rows = _merge_display_rows()
-    by_id = {r["id"]: r for r in rows}
-    demo_rows = [by_id[i] for i in DEMO_IDS]
-    other_rows = [r for r in rows if r["id"] not in DEMO_IDS]
-    n_flip = sum(1 for r in rows if r["should_flip"])
-    has_run = LAST_RESULTS_FILE.exists()
-    n_schema = sum(1 for r in rows if r.get("schema_ok")) if has_run else None
-    n_aligned = sum(1 for r in rows if r.get("aligned") is True) if has_run else None
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric("该变", f"{n_flip} 题")
-    c2.metric("没变", f"{len(rows) - n_flip} 题")
-    c3.metric(
-        "翻转对齐",
-        f"{n_aligned}/{n_schema}" if n_aligned is not None else "未跑",
-    )
-
-    st.markdown(
-        "演示只看下面四行：**住宿、餐补该变；通勤、抬头没变。** "
-        "点开一题可看旧答、新答和出处版本。"
-    )
-
-    if st.button("运行对照", type="primary"):
-        with st.spinner("正在对两库各问一遍，大约需要一两分钟…"):
-            try:
-                run_impact(k=st.session_state.get("top_k", 3))
-            except RuntimeError as e:
-                st.error(str(e))
-                return
-            except Exception as e:
-                st.error(f"对照失败：{e}")
-                return
-        st.rerun()
-
-    highlight_id = st.session_state.get("highlight_id")
-
-    st.subheader("演示四题")
-    table_data = []
-    for row in demo_rows:
-        old_s = row.get("old_short") or row["old_conclusion"]
-        new_s = row.get("new_short") or row["new_conclusion"]
-        table_data.append({
-            "变化": _flip_label(row["should_flip"]),
-            "风险": row["risk"],
-            "问题": row["question"],
-            "旧 → 新": f"{old_s} → {new_s}",
-        })
-    st.dataframe(table_data, width="stretch", hide_index=True)
-
-    for row in demo_rows:
-        _render_row_detail(row, expanded=(highlight_id == row["id"]))
-
-    st.subheader("其余题")
-    for row in other_rows:
-        _render_row_detail(row, expanded=(highlight_id == row["id"]))
-
-
-def _render_ask_page(k: int) -> None:
-    """第二页：单题问答，当尺子，不当主产品。"""
-    st.caption("聊天只是尺子。主库问答仍走原路径，用来随口验证一笔。")
-
-    if not _main_index_ready():
-        st.error(
-            "主库向量索引不存在，请先在终端执行建库：\n\n"
-            "`python main.py index`"
-        )
+    if mode == "text":
+        by_ch = {}
+        for r in usable:
+            by_ch.setdefault(r.get("chapter") or "未分章", []).append(r)
+        for ch, items in by_ch.items():
+            pages = [i.get("page") for i in items]
+            st.markdown(f"**{ch} · p.{min(pages)}–{max(pages)}**")
+            for r in items:
+                st.caption(r.get("clause") or "")
+                st.write(r.get("text") or "")
         return
-
-    question = st.text_input(
-        "请输入问题",
-        key="input_question",
-        placeholder="例如：上海出差住了600一晚，能报多少？",
-    )
-
-    if st.button("提问", type="primary"):
-        if question.strip():
-            st.session_state.trigger_ask = True
-        else:
-            st.warning("请输入问题后再提交。")
-
-    if st.session_state.get("trigger_ask") and question.strip():
-        st.session_state.trigger_ask = False
-        with st.spinner("检索并生成回答中…"):
-            try:
-                result = ask(question.strip(), k=k)
-            except RuntimeError as e:
-                st.error(str(e))
-                return
-            except Exception as e:
-                st.error(f"请求失败：{e}")
-                return
-        _render_result(result)
+    for i, r in enumerate(usable):
+        if i:
+            st.caption("follow_reference 跳转")
+        png = render_page_png(pdf_path, int(r["page"]), [r.get("bbox")] if r.get("bbox") else None)
+        st.image(png, caption=f"第 {r['page']} 页 {r.get('chapter') or ''}", use_container_width=True)
+        if r.get("bbox"):
+            st.caption("bbox=" + ",".join(f"{x:.1f}" for x in r["bbox"]))
 
 
 def main():
-    st.set_page_config(page_title="制度变更影响面", layout="wide")
+    st.set_page_config(page_title="招标文件核对", layout="wide")
+    st.title("招标文件核对")
+    st.caption("投标前把招标文件读一遍：废标、评分、材料、空位。点一行看原件黄框。演示数据，不是真投标。")
 
-    st.title("制度变更影响面")
-    st.caption(
-        "财务改完报销制度后，同一批员工常问题对旧版、新版各问一遍。"
-        "变了的才需要通知；没变的不用当新闻。演示数据，不是真审批。"
-    )
-
-    if "input_question" not in st.session_state:
-        st.session_state.input_question = ""
+    if "result" not in st.session_state:
+        st.session_state.result = None
+    if "picked" not in st.session_state:
+        st.session_state.picked = None
 
     with st.sidebar:
-        st.header("设置")
-        k = st.slider("检索条数 (top-k)", min_value=1, max_value=10, value=3)
-        st.session_state.top_k = k
+        st.header("输入")
+        sample_name = st.selectbox("样本", list(SAMPLE.keys()))
+        uploaded = st.file_uploader("或上传招标 PDF", type=["pdf"])
+        company_text = st.text_area(
+            "company.yaml",
+            value=Path_read_company(),
+            height=220,
+        )
+        k_run = st.button("运行核对", type="primary")
+        view_mode = st.radio("原文", ["原件按页", "解析文本"], horizontal=True)
 
-        st.header("演示四题")
-        for qid, q in DEMO_QUESTIONS:
-            if st.button(q, width="stretch", key=f"example_{qid}"):
-                st.session_state.input_question = q
-                st.session_state.highlight_id = qid
+    pdf_path = SAMPLE[sample_name]
+    if uploaded is not None:
+        tmp = Path_write_upload(uploaded)
+        pdf_path = str(tmp)
 
-    tab_table, tab_ask = st.tabs(["影响面对照", "单题问答"])
-    with tab_table:
-        _render_impact_table()
-    with tab_ask:
-        _render_ask_page(k)
+    if k_run:
+        yaml.safe_load(company_text)
+        company_file = Path_write_yaml(company_text)
+        with st.spinner("切章并四步出表，需要调用模型…"):
+            result = run_check(pdf_path, company_file)
+        set_context(result["index"], result["company"])
+        # index 不能放进可序列化缓存之外的展示字段
+        st.session_state.result = {k: v for k, v in result.items() if k not in ("index", "pages")}
+        st.session_state.result["_pdf"] = result["pdf_path"]
+        st.session_state.result["_index"] = result["index"]
+        st.session_state.picked = None
+        print_tables(result)
+
+    result = st.session_state.result
+    if not result:
+        st.info("选择样本或上传 PDF 后点「运行核对」。样本 PDF 需先按 sample/sources.md 下载。")
+        return
+
+    left, right = st.columns([1.15, 0.85])
+    with left:
+        names = [t[1] for t in TABS] + ["提问"]
+        tab_objs = st.tabs(names)
+        for i, (key, title) in enumerate(TABS):
+            with tab_objs[i]:
+                rows = result.get(key) or []
+                st.caption(f"{title} {len(rows)} 条")
+                for j, row in enumerate(rows):
+                    label = row.get("condition") or row.get("item") or row.get("material") or row.get("form") or row.get("name") or f"第{j+1}行"
+                    verdict = row.get("verdict")
+                    prefix = "★ " if row.get("star") else ""
+                    head = f"{prefix}{_verdict_style(verdict) + ' · ' if verdict else ''}{label}"
+                    if st.button(head, key=f"{key}-{j}", use_container_width=True):
+                        st.session_state.picked = row
+        with tab_objs[-1]:
+            q = st.text_input("只问这份文件", placeholder="例如：投标保证金多少？能不能联合体投标？")
+            if st.button("提问") and q.strip():
+                from tender.ask_box import ask_question
+                if result.get("_index") is not None:
+                    set_context(result["_index"], result["company"])
+                out = ask_question(q.strip())
+                for step in out["trace"]:
+                    st.code(f"{step['tool']} {step['args']}")
+                st.write(out["answer"])
+        st.download_button(
+            "导出 Excel",
+            data=_export_xlsx(result),
+            file_name="tender-check.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    with right:
+        st.subheader("原文")
+        picked = st.session_state.picked
+        if not picked:
+            st.caption("点左侧一行，这里翻到对应页并画框")
+        else:
+            mode = "text" if view_mode == "解析文本" else "page"
+            _show_refs(result["_pdf"], picked.get("refs") or [], mode)
+
+    with st.expander("切出的章节"):
+        for s in result.get("sections") or []:
+            st.write(f"{TYPE_LABEL.get(s['type'], s['type'])} {s['title']} p.{s['start_page']}-{s['end_page']}")
+
+
+def Path_read_company() -> str:
+    p = Path("sample/company.yaml")
+    if p.exists():
+        return p.read_text(encoding="utf-8")
+    return "name: 示例公司\n"
+
+
+def Path_write_yaml(text: str):
+    p = Path("data/tender_last_company.yaml")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def Path_write_upload(uploaded):
+    p = Path("data/tender_upload.pdf")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(uploaded.getvalue())
+    return p
 
 
 if __name__ == "__main__":
