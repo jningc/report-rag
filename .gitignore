@@ -3,6 +3,8 @@
 __pycache__/
 data/tender_index/
 data/tender_last.json
+data/step_output/
+data/web_jobs/
 sample/*.pdf
 .DS_Store
 *.faiss

@@ -5,6 +5,7 @@
 """
 
 import re
+from contextvars import ContextVar
 from pathlib import Path
 from typing import TypedDict
 
@@ -29,6 +30,18 @@ from tender.tables import (
 
 _REF_HINT = re.compile(r"(前附表|资料表|详见第|见第.{0,8}章|按第.{0,8}章|见本招标文件)")
 _STAR_RE = re.compile(r"[★▲＊*]")
+# 网页核对时由 run_check 设上；命令行不设，_emit 直接返回
+_progress_cb: ContextVar = ContextVar("tender_progress", default=None)
+
+
+def _emit(stage: str, state: str, detail: str = "", **payload) -> None:
+    """通知当前阶段。没有回调时不做任何事。"""
+    cb = _progress_cb.get()
+    if cb is None:
+        return
+    event = {"stage": stage, "state": state, "detail": detail}
+    event.update(payload)
+    cb(event)
 
 
 class CheckState(TypedDict, total=False):
@@ -116,6 +129,8 @@ def _stamp_pages(rows: list) -> None:
 
 def node_feibiao(state: CheckState) -> dict:
     """废标：只搜邀请、须知、资格。"""
+    print("  [废标] 检索邀请、须知、资格，并调用模型", flush=True)
+    _emit("feibiao", "running", "检索邀请、须知、资格")
     types = ["invite", "notice", "qualify"]
     miss = [TYPE_LABEL[t] for t in required_types_present(state["index"].sections, types)]
     hits = state["index"].search(
@@ -141,31 +156,44 @@ def node_feibiao(state: CheckState) -> dict:
             break
     table.rows.sort(key=lambda r: (not r.star, r.verdict != "不满足"))
     _stamp_pages(table.rows)
-    return {"feibiao": [r.model_dump() for r in table.rows], "missing": miss}
+    rows = [r.model_dump() for r in table.rows]
+    print(f"  [废标] {len(rows)} 条", flush=True)
+    _emit("feibiao", "done", f"{len(rows)} 条", rows=rows, missing=miss)
+    return {"feibiao": rows, "missing": miss}
 
 
 def node_pingfen(state: CheckState) -> dict:
     """评分：只搜评标办法。"""
+    print("  [评分] 检索评标办法，并调用模型", flush=True)
+    _emit("pingfen", "running", "检索评标办法")
     types = ["score"]
     if required_types_present(state["index"].sections, types):
-        return {"pingfen": [{
+        print("  [评分] 未切到评标章", flush=True)
+        rows = [{
             "item": "人工看：未切到评标章",
             "score": "",
             "standard": "",
             "company": "",
             "estimate": "",
             "refs": [],
-        }]}
+        }]
+        _emit("pingfen", "done", "未切到评标章", rows=rows)
+        return {"pingfen": rows}
     hits = state["index"].search("评标标准 分值 价格分 商务 技术 业绩", types, k=6)
     extra = "公司情况：\n" + yaml.safe_dump(state["company"], allow_unicode=True)
     extra += "\n抽出评分项、分值、标准；能对照公司材料的写上预估，主观分写「主观分，不预估」。"
     table = _extract(PingfenTable, "你在抽取评分项。", hits, extra)
     _follow(state["index"], table.rows, types)
-    return {"pingfen": [r.model_dump() for r in table.rows]}
+    rows = [r.model_dump() for r in table.rows]
+    print(f"  [评分] {len(rows)} 条", flush=True)
+    _emit("pingfen", "done", f"{len(rows)} 条", rows=rows)
+    return {"pingfen": rows}
 
 
 def node_cailiao(state: CheckState) -> dict:
     """材料：须知 + 资格 + 格式，对照 YAML。"""
+    print("  [材料] 检索须知、资格、格式，并调用模型", flush=True)
+    _emit("cailiao", "running", "检索须知、资格、格式")
     types = ["notice", "qualify", "format"]
     hits = state["index"].search("应提供 证明 证书 营业执照 保证金 授权委托 声明函", types, k=6)
     extra = "公司情况：\n" + yaml.safe_dump(state["company"], allow_unicode=True)
@@ -173,28 +201,41 @@ def node_cailiao(state: CheckState) -> dict:
     table = _extract(CailiaoTable, "你在抽取投标须提交的材料。", hits, extra)
     _follow(state["index"], table.rows, types)
     _stamp_pages(table.rows)
-    return {"cailiao": [r.model_dump() for r in table.rows]}
+    rows = [r.model_dump() for r in table.rows]
+    print(f"  [材料] {len(rows)} 条", flush=True)
+    _emit("cailiao", "done", f"{len(rows)} 条", rows=rows)
+    return {"cailiao": rows}
 
 
 def node_kongwei(state: CheckState) -> dict:
     """空位：只搜格式章，只列要填的格，不代填。"""
+    print("  [空位] 检索投标文件格式，并调用模型", flush=True)
+    _emit("kongwei", "running", "检索投标文件格式")
     types = ["format"]
     if required_types_present(state["index"].sections, types):
-        return {"kongwei": [{
+        print("  [空位] 未切到投标文件格式章", flush=True)
+        rows = [{
             "form": "人工看：未切到投标文件格式章",
             "field": "",
             "note": "",
             "refs": [],
-        }]}
+        }]
+        _emit("kongwei", "done", "未切到投标文件格式章", rows=rows)
+        return {"kongwei": rows}
     hits = state["index"].search("投标函 开标一览表 偏离表 声明函 空白 实质性格式", types, k=6)
     extra = "只列出表格名称和要填的空位，不要替用户填写。"
     table = _extract(KongweiTable, "你在抽取投标文件格式里的空位。", hits, extra)
     _follow(state["index"], table.rows, types)
-    return {"kongwei": [r.model_dump() for r in table.rows]}
+    rows = [r.model_dump() for r in table.rows]
+    print(f"  [空位] {len(rows)} 条", flush=True)
+    _emit("kongwei", "done", f"{len(rows)} 条", rows=rows)
+    return {"kongwei": rows}
 
 
 def node_aux(state: CheckState) -> dict:
     """时间节点和合同要点。合同与废标分开。"""
+    print("  [时间] 调用模型", flush=True)
+    _emit("aux", "running", "抽取时间节点")
     time_hits = state["index"].search(
         "截止时间 开标 获取招标文件 有效期 质疑",
         ["invite", "notice"],
@@ -206,6 +247,8 @@ def node_aux(state: CheckState) -> dict:
         k=4,
     )
     shijian = _extract(ShijianTable, "你在抽取时间节点。", time_hits)
+    print("  [合同] 调用模型", flush=True)
+    _emit("aux", "running", "抽取合同要点")
     hetong = _extract(
         HetongTable,
         "你在抽取合同要点。履约保证金不是投标保证金，不要和废标表混。",
@@ -213,9 +256,19 @@ def node_aux(state: CheckState) -> dict:
     )
     _follow(state["index"], shijian.rows, ["invite", "notice"])
     _follow(state["index"], hetong.rows, ["contract", "format"])
+    shijian_rows = [r.model_dump() for r in shijian.rows]
+    hetong_rows = [r.model_dump() for r in hetong.rows]
+    print(f"  [时间] {len(shijian_rows)} 条  [合同] {len(hetong_rows)} 条", flush=True)
+    _emit(
+        "aux",
+        "done",
+        f"时间 {len(shijian_rows)} 条，合同 {len(hetong_rows)} 条",
+        shijian=shijian_rows,
+        hetong=hetong_rows,
+    )
     return {
-        "shijian": [r.model_dump() for r in shijian.rows],
-        "hetong": [r.model_dump() for r in hetong.rows],
+        "shijian": shijian_rows,
+        "hetong": hetong_rows,
     }
 
 
@@ -236,12 +289,47 @@ def build_graph():
     return g.compile()
 
 
-def run_check(pdf_path, company_path) -> dict:
+def run_check(pdf_path, company_path, on_progress=None) -> dict:
     """解析、切章、建库、跑四步，返回表数据。"""
+    token = _progress_cb.set(on_progress) if on_progress is not None else None
+    try:
+        return _run_check(pdf_path, company_path)
+    finally:
+        if token is not None:
+            _progress_cb.reset(token)
+
+
+def _run_check(pdf_path, company_path) -> dict:
+    """原有核对顺序：解析、切章、建库、四步出表。"""
+    print(f"1/4 解析 {pdf_path}", flush=True)
+    _emit("parse", "running", "按页抽文字和块坐标")
     pages = parse_pdf(pdf_path)
+    print(f"    {len(pages)} 页", flush=True)
+    _emit("parse", "done", f"{len(pages)} 页", page_count=len(pages))
+    print("2/4 切章", flush=True)
+    _emit("sections", "running", "按标题切章")
     sections = split_sections(pages)
-    index = build_tender_index(pages, sections, pdf_path)
+    for sec in sections:
+        label = TYPE_LABEL.get(sec["type"], sec["type"])
+        print(f"    {label}  {sec['title']}  p.{sec['start_page']}-{sec['end_page']}", flush=True)
+    _emit("sections", "done", f"{len(sections)} 章", sections=sections)
+    print("3/4 建索引（向量化，要几分钟）", flush=True)
+    _emit("index", "running", "开始按章建向量")
+
+    def _on_chapter(label, count):
+        _emit("index", "running", f"正在建库 {label} {count} 段")
+
+    index = build_tender_index(pages, sections, pdf_path, on_chapter=_on_chapter)
     company = load_company(company_path)
+    _emit(
+        "index",
+        "done",
+        "索引建完",
+        index=index,
+        company=company,
+        pdf_path=str(Path(pdf_path).resolve()),
+    )
+    print("4/4 调用模型出表", flush=True)
     graph = build_graph()
     out = graph.invoke({
         "pdf_path": str(pdf_path),
@@ -264,21 +352,24 @@ def run_check(pdf_path, company_path) -> dict:
     }
 
 
-def print_tables(result: dict) -> None:
-    """把核对结果打到终端。"""
-    print("章节：")
+def render_tables(result: dict) -> str:
+    """核对结果的纯文本，终端和文件用同一份。"""
+    lines = ["章节："]
     for s in result["sections"]:
-        print(f"  {TYPE_LABEL.get(s['type'], s['type'])}  {s['title']}  p.{s['start_page']}-{s['end_page']}")
+        lines.append(
+            f"  {TYPE_LABEL.get(s['type'], s['type'])}  {s['title']}  p.{s['start_page']}-{s['end_page']}"
+        )
     if result.get("missing"):
-        print("缺失章节：", "、".join(result["missing"]))
+        lines.append("缺失章节： " + "、".join(result["missing"]))
 
     def _block(title, rows, fields):
-        print(f"\n== {title} {len(rows)} 条 ==")
+        lines.append(f"\n== {title} {len(rows)} 条 ==")
         for i, row in enumerate(rows, start=1):
             bits = [str(row.get(k, "")) for k in fields]
             refs = row.get("refs") or []
             pages = ",".join(str(r.get("page")) for r in refs if r.get("page"))
-            print(f"{i}. " + " | ".join(bits) + (f"  [{pages}]" if pages else "  [无页码]"))
+            tail = f"  [{pages}]" if pages else "  [无页码]"
+            lines.append(f"{i}. " + " | ".join(bits) + tail)
 
     _block("废标对照", result["feibiao"], ["verdict", "condition"])
     _block("评分对照", result["pingfen"], ["item", "score", "estimate"])
@@ -286,3 +377,9 @@ def print_tables(result: dict) -> None:
     _block("空位对照", result["kongwei"], ["form", "field"])
     _block("时间节点", result["shijian"], ["name", "when"])
     _block("合同要点", result["hetong"], ["item", "content"])
+    return "\n".join(lines)
+
+
+def print_tables(result: dict) -> None:
+    """把核对结果打到终端。"""
+    print(render_tables(result))

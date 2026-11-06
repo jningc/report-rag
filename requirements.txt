@@ -14,4 +14,7 @@ faiss-cpu
 sentence-transformers
 torch
 streamlit
+starlette
+uvicorn
+python-multipart
 pytest

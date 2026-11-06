@@ -8,6 +8,9 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     font-size: 14px;
     color: #1f2329;
@@ -50,6 +53,9 @@
   button:hover { border-color: #3370ff; color: #3370ff; }
   button.primary { background: #3370ff; color: #fff; border-color: #3370ff; }
   button.primary:hover { background: #245bdb; color: #fff; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button:disabled:hover { border-color: #d0d3d9; color: inherit; background: #fff; }
+  button.primary:disabled:hover { background: #3370ff; color: #fff; border-color: #3370ff; }
 
   .steps {
     display: flex;
@@ -74,13 +80,16 @@
   .step.running { border-color: #3370ff; background: #f0f5ff; }
   .step.running .state { color: #3370ff; }
   .step.done .state { color: #00a870; }
+  .step.error { border-color: #d83931; background: #fff1f0; }
+  .step.error .state { color: #d83931; }
 
   main {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.95fr);
     gap: 12px;
     padding: 12px 20px 20px;
-    height: calc(100vh - 168px);
+    flex: 1;
+    height: auto;
     min-height: 560px;
   }
   .panel {
@@ -315,6 +324,32 @@
     padding: 6px 10px;
   }
   .ask-input input:focus { outline: none; border-color: #3370ff; }
+  .yaml-box { background: #fff; border-bottom: 1px solid #e5e6eb; padding: 0 20px 10px; }
+  .yaml-box summary { cursor: pointer; font-size: 12px; color: #646a73; padding: 8px 0; }
+  .yaml-box textarea {
+    width: 100%;
+    height: 140px;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border: 1px solid #d0d3d9;
+    border-radius: 6px;
+    padding: 8px 10px;
+    resize: vertical;
+  }
+  .job-error {
+    display: none;
+    background: #fff1f0;
+    color: #d83931;
+    border-bottom: 1px solid #ffccc7;
+    padding: 8px 20px;
+    font-size: 13px;
+  }
+  .shot-wrap { max-width: 760px; margin: 0 auto 16px; }
+  .shot-wrap img {
+    width: 100%;
+    display: block;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  }
 
   /* 很窄时才上下排列，保证演示时左右能同时看到表和页图 */
   @media (max-width: 720px) {
@@ -326,17 +361,26 @@
 <body>
 
 <div class="banner">
-  效果演示：假数据，没有真实 PDF 解析。右侧默认是「原件按页」——用页图模拟 PyMuPDF 记下的块坐标，点左侧一行就翻页并画框。可切到「解析文本」看章节切分。没有页码的行只标人工看，不画框。
+  左侧是核对表，右侧是原件页图。点一行，按块坐标画黄框。核对在后台进行，这一页只负责显示。
 </div>
+<div class="job-error" id="job-error"></div>
 
 <header>
   <h1>招标文件核对</h1>
-  <div class="file-chip">招标文件：<b>2026年区管城市道路健康工程（监理服务）.pdf</b> · 约 100 页 · 7 章</div>
-  <div class="file-chip">公司情况：<b>company.yaml</b> · 示例监理有限公司</div>
+  <div class="file-chip">招标文件：<b id="file-name">未选择</b> <span id="file-meta"></span></div>
+  <div class="file-chip">公司情况：<b id="company-name">company.yaml</b></div>
   <div class="spacer"></div>
-  <button id="btn-rerun">重新核对</button>
-  <button id="btn-export" class="primary">导出 Excel</button>
+  <button id="btn-pick" type="button">选择 PDF</button>
+  <input id="pdf-file" type="file" accept="application/pdf,.pdf" hidden>
+  <button id="btn-sample" type="button">用东城道路样本</button>
+  <button id="btn-run" class="primary" type="button">开始核对</button>
+  <button id="btn-export" type="button" disabled>导出 Excel</button>
 </header>
+
+<details class="yaml-box">
+  <summary>编辑 company.yaml</summary>
+  <textarea id="company-yaml" spellcheck="false"></textarea>
+</details>
 
 <div class="steps" id="steps"></div>
 
@@ -373,386 +417,132 @@
 </main>
 
 <script>
-// 演示数据：条款原文取自招标文件，页码为示意
-const STEPS = [
-  { name: "1 查废标", scope: "只搜：投标邀请、投标人须知、资格审查" },
-  { name: "2 查评分", scope: "只搜：评标办法" },
-  { name: "3 查材料", scope: "只搜：须知、资格审查、格式，再对 company.yaml" },
-  { name: "4 列空位", scope: "只搜：投标文件格式" },
-  { name: "辅助", scope: "时间节点、合同要点、★ 条款" }
+const TAB_DEFS = [
+  { key: "fb", title: "废标对照", table: "feibiao", cols: ["条件", "出处", "公司情况", "结论"],
+    cells: function (r) { return [r.condition, null, r.company, null]; } },
+  { key: "pf", title: "评分对照", table: "pingfen", cols: ["评分项", "分值", "评分标准", "出处", "公司材料", "预估"],
+    cells: function (r) { return [r.item, r.score, r.standard, null, r.company, r.estimate]; } },
+  { key: "cl", title: "材料对照", table: "cailiao", cols: ["须提交材料", "出处", "公司情况", "结论"],
+    cells: function (r) { return [r.material, null, r.company, null]; } },
+  { key: "kw", title: "空位对照", table: "kongwei", cols: ["所在表格", "要填的内容", "注意", "出处"],
+    cells: function (r) { return [r.form, r.field, r.note, null]; } },
+  { key: "sj", title: "时间节点", table: "shijian", cols: ["节点", "时间", "说明", "出处"],
+    cells: function (r) { return [r.name, r.when, r.note, null]; } },
+  { key: "ht", title: "合同要点", table: "hetong", cols: ["条款", "内容", "提示", "出处"],
+    cells: function (r) { return [r.item, r.content, r.note, null]; } }
 ];
-
-const S = {
-  ok: ["ok", "满足"],
-  bad: ["bad", "不满足"],
-  check: ["check", "人工看"],
-  info: ["info", "无须提供"]
-};
-
-const DATA = {
-  fb: {
-    title: "废标对照",
-    cols: ["条件", "出处", "公司情况", "结论"],
-    rows: [
-      {
-        star: true,
-        cells: ["投标文件须满足第五章《采购需求》中所有 ★ 号条款", null, "第五章的 ★ 条款需逐条对照，模型只确认了标记位置", null],
-        status: "check",
-        refs: [
-          { page: 25, ch: "第四章 评标程序、评标方法和评标标准", clause: "符合性审查要求 第 7 项", text: "号条款响应 ★：投标文件满足招标文件第五章《采购需求》中<mark>★号条款要求</mark>的；" },
-          { page: 34, ch: "第五章 采购需求", clause: "follow_reference 跳转", text: "（跟随上一条引用跳转到第五章。本章内带 ★ 标记的条款需逐条列出，不满足任意一条即投标无效。）" }
-        ]
-      },
-      {
-        cells: ["投标报价不得超过采购包最高限价 47.130349 万元，且每条路的报价不得超过该道路的最高限价", null, "计划总报价 45 万元，低于总限价；分路限价需按第五章逐条核对", null],
-        status: "check",
-        refs: [
-          { page: 25, ch: "第四章 评标程序、评标方法和评标标准", clause: "符合性审查要求 第 3 项", text: "投标报价：投标报价<mark>未超过</mark>招标文件中规定的项目/采购包预算金额或者项目/采购包<mark>最高限价</mark>；" },
-          { page: 8, ch: "第二章 投标人须知", clause: "投标人须知资料表 11.2", text: "投标报价的特殊规定：■有，具体情形：<mark>每条路的投标报价不能超过该道路的最高限价</mark>，详见招标文件第五章。" }
-        ]
-      },
-      {
-        cells: ["投标有效期少于 90 日历天的，投标无效", null, "投标函拟填 90 日历天", null],
-        status: "ok",
-        refs: [
-          { page: 17, ch: "第二章 投标人须知", clause: "正文 13.1", text: "投标文件应在本招标文件《投标人须知资料表》中规定的投标有效期内保持有效，<mark>投标有效期少于招标文件规定期限的，其投标无效</mark>。" },
-          { page: 9, ch: "第二章 投标人须知", clause: "投标人须知资料表 13.1（前附表优先）", text: "投标有效期：自提交投标文件的截止之日起算 <mark>90</mark> 日历天。" }
-        ]
-      },
-      {
-        cells: ["未按要求提交投标保证金 8000 元的，投标无效（保函原件或到账须在投标截止前）", null, "拟用保函，尚未开具", null],
-        status: "check",
-        refs: [
-          { page: 16, ch: "第二章 投标人须知", clause: "正文 12.3", text: "投标保证金到账（保函提交）截止时间同投标截止时间……<mark>未按上述要求缴纳投标保证金的，其投标无效</mark>。", bbox: { x: 8, y: 52, w: 84, h: 12 } },
-          { page: 8, ch: "第二章 投标人须知", clause: "投标人须知资料表 12.1", text: "投标保证金金额：01 包：<mark>8000 元</mark>；……投标人应以出具保函（保险）形式提交投标保证金。", bbox: { x: 8, y: 30, w: 84, h: 12 } }
-        ]
-      },
-      {
-        cells: ["具备市政公用工程专业乙级及以上监理资质", null, "市政公用工程监理乙级，有效期至 2028-03", null],
-        status: "ok",
-        refs: [
-          { page: 22, ch: "第三章 资格审查", clause: "资格审查要求 3-1", text: "特定资格要求：（1）有效的<mark>市政公用工程专业资质乙级及以上监理资质</mark>" }
-        ]
-      },
-      {
-        cells: ["拟派总监理工程师具备注册监理工程师证书，注册专业为市政公用工程，有任命书，注册单位与投标人一致", null, "总监注册专业为房屋建筑工程；任命书未提供", null],
-        status: "bad",
-        refs: [
-          { page: 22, ch: "第三章 资格审查", clause: "资格审查要求 3-1", text: "（2）拟派总监理工程师具备注册监理工程师证书，<mark>注册专业市政公用工程</mark>，具有<mark>总监理工程师任命书</mark>，且注册单位与投标人单位一致。", bbox: { x: 8, y: 48, w: 84, h: 14 } },
-          { page: 2, ch: "第一章 投标邀请", clause: "申请人的资格要求（4）", text: "投标人拟派总监理工程师具备注册监理工程师证书，注册专业市政公用工程，具有总监理工程师任命书，且注册单位与投标人单位一致。", bbox: { x: 8, y: 40, w: 84, h: 12 } }
-        ]
-      },
-      {
-        cells: ["被列入失信被执行人、重大税收违法案件当事人名单、政府采购严重违法失信名单的，投标无效", null, "由采购代理机构查询，投标人无须提供；建议自行先查一次", null],
-        status: "info",
-        refs: [
-          { page: 21, ch: "第三章 资格审查", clause: "资格审查要求 1-3", text: "查询渠道：信用中国网站和中国政府采购网……经认定的被列入失信被执行人、重大税收违法案件当事人名单、政府采购严重违法失信行为记录名单的投标人，<mark>其投标无效</mark>。" }
-        ]
-      },
-      {
-        cells: ["本项目不接受联合体投标", null, "单独投标", null],
-        status: "ok",
-        refs: [
-          { page: 1, ch: "第一章 投标邀请", clause: "一、项目基本情况 6", text: "本项目是否接受联合体投标：□是 <mark>■否</mark>。", bbox: { x: 8, y: 36, w: 84, h: 8 } }
-        ]
-      },
-      {
-        cells: ["电子签章须按平台操作手册完成（解析未抽出页码）", null, "company.yaml 不记录签章操作", null],
-        status: "check",
-        refs: []
-      },
-      {
-        cells: ["未在规定期限内通过电子交易平台获取所投采购包招标文件的，投标无效", null, "company.yaml 不记录此项，需确认已在 7 月 28 日至 8 月 4 日获取", null],
-        status: "check",
-        refs: [
-          { page: 6, ch: "第二章 投标人须知", clause: "获取招标文件", text: "未在规定期限内按上述操作获取文件的采购包，<mark>其投标无效</mark>。" }
-        ]
-      },
-      {
-        cells: ["标记为实质性格式的文件须按要求提供并签署、盖章", null, "需在制作投标文件时逐份确认", null],
-        status: "check",
-        refs: [
-          { page: 25, ch: "第四章 评标程序、评标方法和评标标准", clause: "符合性审查要求 第 6 项", text: "实质性格式：<mark>标记为实质性格式的文件均按招标文件要求提供且签署、盖章的</mark>；" }
-        ]
-      }
-    ]
-  },
-
-  pf: {
-    title: "评分对照",
-    cols: ["评分项", "分值", "评分标准", "出处", "公司材料", "预估"],
-    rows: [
-      {
-        cells: ["投标报价", "30", "最低有效报价为评标基准价，得分 =（评标基准价 / 投标报价）× 30", null, "计划报价 45 万元", "依赖他人报价，可在提问框试算"],
-        status: null,
-        refs: [
-          { page: 31, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 1、投标报价", text: "满足招标文件要求且投标价格最低的投标报价为评标基准价，其价格分为满分。……<mark>投标报价得分＝（评标基准价/投标报价）×30</mark>。" }
-        ]
-      },
-      {
-        cells: ["类似项目业绩", "4", "2023 年 7 月 1 日至今的类似工程监理业绩，每个 2 分，满分 4 分", null, "1 项（2024 年某区道路大修监理）", "2 / 4"],
-        status: null,
-        refs: [
-          { page: 31, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 2、商务部分 1", text: "具有<mark>近三年（2023 年 7 月 1 日至今）类似工程监理业绩，每个 2 分，满分 4 分</mark>" }
-        ]
-      },
-      {
-        cells: ["总监理工程师类似业绩", "3", "以总监身份完成的类似监理业绩 1 个以上（含）得 3 分", null, "拟派总监有 1 项", "3 / 3，但该总监资格不满足"],
-        status: null,
-        refs: [
-          { page: 31, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 2、商务部分 2", text: "<mark>在担任总监理工程师职务下的类似监理业绩；1 个以上（含）3 分</mark>，没有业绩不得分。" }
-        ]
-      },
-      {
-        cells: ["体系认证", "3", "质量、环境、职业健康安全管理体系认证，每个 1 分", null, "质量、环境", "2 / 3"],
-        status: null,
-        refs: [
-          { page: 31, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 2、商务部分 3", text: "企业通过<mark>质量管理体系认证、环境管理体系认证、职业健康安全管理体系认证，具有一个得 1 分</mark>，满分 3 分。" }
-        ]
-      },
-      {
-        cells: ["技术：质量控制措施", "8", "针对本项目 8 分；有针对性但需完善 6 分；通用 4 分；有欠缺 2 分；未提供 0 分", null, "—", "主观分，不预估"],
-        status: null,
-        refs: [
-          { page: 32, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 3、技术部分", text: "质量控制措施（8 分）：1.明确工程质量要求阶段性实现的保证措施，<mark>方案内容针对本项目，得 8 分</mark>；2.方案有一定的针对性……得 6 分；3.方案通用……得 4 分；4.方案有欠缺，得 2 分；5.未提供相关方案，得 0 分" }
-        ]
-      },
-      {
-        cells: ["技术：进度控制措施", "8", "详细进度计划且针对本项目 8 分；阶段划分不明显 6 分；通用 4 分", null, "—", "主观分，不预估"],
-        status: null,
-        refs: [
-          { page: 32, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 3、技术部分", text: "1.<mark>提供了详细的进度计划，阶段分明，内容针对本项目，得 8 分</mark>；2.方案详细、内容全面但阶段划分不明显，得 6 分；3.方案通用，不针对本项目，得 4 分；" }
-        ]
-      },
-      {
-        cells: ["技术部分其余各项", "44", "合计技术部分 60 分，其余评审项见原文", null, "—", "主观分，不预估"],
-        status: null,
-        refs: [
-          { page: 32, ch: "第四章 评标程序、评标方法和评标标准", clause: "评标标准 3、技术部分", text: "<mark>技术部分（60 分）</mark>" }
-        ]
-      }
-    ]
-  },
-
-  cl: {
-    title: "材料对照",
-    cols: ["须提交材料", "出处", "公司情况", "结论"],
-    rows: [
-      { cells: ["营业执照等主体资格证明", null, "已有", null], status: "ok",
-        refs: [{ page: 21, ch: "第三章 资格审查", clause: "资格审查要求 1-1", text: "投标人为企业（包括合伙企业）的，应提供<mark>有效的“营业执照”</mark>；投标人为事业单位的，应提供有效的“事业单位法人证书”；……" }] },
-      { cells: ["市政公用工程监理乙级资质证书电子件", null, "已有", null], status: "ok",
-        refs: [{ page: 22, ch: "第三章 资格审查", clause: "资格审查要求 3-1", text: "（1）有效的市政公用工程专业资质乙级及以上监理资质……<mark>提供证明文件的电子件或电子证照</mark>" }] },
-      { cells: ["总监理工程师注册证书", null, "已有，但注册专业为房屋建筑工程", null], status: "bad",
-        refs: [{ page: 22, ch: "第三章 资格审查", clause: "资格审查要求 3-1", text: "拟派总监理工程师具备注册监理工程师证书，<mark>注册专业市政公用工程</mark>" }] },
-      { cells: ["总监理工程师任命书", null, "company.yaml 中没有", null], status: "bad",
-        refs: [{ page: 22, ch: "第三章 资格审查", clause: "资格审查要求 3-1", text: "具有<mark>总监理工程师任命书</mark>，且注册单位与投标人单位一致。" }] },
-      { cells: ["投标保证金凭证 / 保函电子件，并在截止前上传平台", null, "保函待开具", null], status: "check",
-        refs: [{ page: 16, ch: "第二章 投标人须知", clause: "正文 12.4", text: "投标人除需在投标文件中提供<mark>“投标保证金凭证/交款单据电子件”</mark>，还需在投标截止时间前，通过电子交易平台上传。" }] },
-      { cells: ["授权委托书（实质性格式）", null, "有模板，需法定代表人签署", null], status: "check",
-        refs: [{ page: 70, ch: "第七章 投标文件格式", clause: "授权委托书", text: "委托期限：自本授权委托书签署之日起<mark>至投标有效期届满之日止</mark>。" }] },
-      { cells: ["中小企业声明函", null, "company.yaml 标记为小型企业，需提供", null], status: "check",
-        refs: [{ page: 73, ch: "第七章 投标文件格式", clause: "中小企业声明函", text: "本公司（联合体）郑重声明，根据《政府采购促进中小企业发展管理办法》（财库﹝2020﹞46 号）的规定……" }] },
-      { cells: ["类似项目业绩证明", null, "1 份合同", null], status: "ok",
-        refs: [{ page: 80, ch: "第七章 投标文件格式", clause: "8-2-1 类似项目业绩", text: "<mark>8-2-1 类似项目业绩</mark>" }] },
-      { cells: ["信用记录查询结果", null, "由代理机构查询", null], status: "info",
-        refs: [{ page: 21, ch: "第三章 资格审查", clause: "资格审查要求 1-3", text: "<mark>无须投标人提供，由采购人或采购代理机构查询。</mark>" }] }
-    ]
-  },
-
-  kw: {
-    title: "空位对照",
-    cols: ["所在表格", "要填的内容", "注意", "出处"],
-    rows: [
-      { cells: ["投标函", "投标有效期 ____ 个日历日", "不得少于 90，否则投标无效", null], status: null,
-        refs: [{ page: 69, ch: "第七章 投标文件格式", clause: "投标函", text: "（1）本投标有效期为自提交投标文件的截止之日起<mark>_____</mark>个日历日。" }] },
-      { cells: ["授权委托书", "委托代理人、身份证号、委托期限", "期限须覆盖投标有效期", null], status: null,
-        refs: [{ page: 70, ch: "第七章 投标文件格式", clause: "授权委托书", text: "委托期限：自本授权委托书签署之日起至投标有效期届满之日止。" }] },
-      { cells: ["开标一览表", "投标总价；每条道路的报价", "每条路不得超过该路最高限价", null], status: null,
-        refs: [{ page: 71, ch: "第七章 投标文件格式", clause: "开标一览表", text: "<mark>3 开标一览表（实质性格式）</mark>" }] },
-      { cells: ["合同条款偏离表", "勾选「无偏离」或「有偏离」并逐项列明", "未选择即投标无效", null], status: null,
-        refs: [{ page: 75, ch: "第七章 投标文件格式", clause: "合同条款偏离表", text: "对本项目合同条款的偏离情况（应进行选择，<mark>未选择投标无效</mark>）：□无偏离 □有偏离" }] },
-      { cells: ["商务技术偏离表", "逐项响应说明", "表内不能留空白", null], status: null,
-        refs: [{ page: 76, ch: "第七章 投标文件格式", clause: "商务技术偏离表", text: "对之理解和响应。<mark>此表中若无任何文字说明，内容为空白的，投标无效</mark>。" }] },
-      { cells: ["中小企业声明函", "从业人员、营业收入、资产总额、企业类型", "所属行业：其他未列明行业", null], status: null,
-        refs: [{ page: 73, ch: "第七章 投标文件格式", clause: "中小企业声明函", text: "……承建（承接）企业为<mark>（企业名称）</mark>，从业人员<mark>人</mark>，营业收入为<mark>万元</mark>，资产总额为<mark>万元</mark>，属于<mark>（中型企业、小型企业、微型企业）</mark>；" }] },
-      { cells: ["8-2-2 总监理工程师类似业绩", "项目名称、时间、担任职务、证明材料", "须以总监身份完成", null], status: null,
-        refs: [{ page: 80, ch: "第七章 投标文件格式", clause: "8-2-2", text: "<mark>8-2-2 总监理工程师类似业绩</mark>" }] }
-    ]
-  },
-
-  sj: {
-    title: "时间节点",
-    cols: ["节点", "时间", "说明", "出处"],
-    rows: [
-      { cells: ["获取招标文件", "2026-07-28 至 2026-08-04，09:00-12:00、12:00-17:00", "法定节假日除外，过期未获取即投标无效", null], status: null,
-        refs: [{ page: 2, ch: "第一章 投标邀请", clause: "三、获取招标文件", text: "1.时间：<mark>2026 年 7 月 28 日至 8 月 4 日</mark>，每天上午 09：00 至 12:00，下午 12:00 至 17:00（北京时间，法定节假日除外）。" }] },
-      { cells: ["澄清或修改", "投标截止前至少 15 日", "不足 15 日则顺延截止和开标时间", null], status: null,
-        refs: [{ page: 13, ch: "第二章 投标人须知", clause: "招标文件的澄清或修改", text: "澄清或者修改的内容可能影响投标文件编制的，将在投标截止时间<mark>至少 15 日前</mark>……不足 15 日的，将顺延提交投标文件的截止时间和开标时间。" }] },
-      { cells: ["保证金到账 / 保函提交", "同投标截止时间", "汇款当天须把回执发到代理机构邮箱", null], status: null,
-        refs: [{ page: 16, ch: "第二章 投标人须知", clause: "正文 12.3", text: "投标保证金到账（保函提交）截止时间<mark>同投标截止时间</mark>。" }] },
-      { cells: ["投标截止 / 开标", "2026-08-18 09:00", "远程电子开标，投标人自行解密，不接受纸质文件", null], status: null,
-        refs: [{ page: 2, ch: "第一章 投标邀请", clause: "四、截止时间和开标", text: "投标截止时间、开标时间：<mark>2026 年 8 月 18 日 09 点 00 分</mark>（北京时间）。地点：采用远程电子开标方式……" }] },
-      { cells: ["投标有效期", "投标截止起 90 日历天", "", null], status: null,
-        refs: [{ page: 9, ch: "第二章 投标人须知", clause: "投标人须知资料表 13.1", text: "投标有效期：自提交投标文件的截止之日起算 <mark>90</mark> 日历天。" }] },
-      { cells: ["质疑", "知道权益受损之日起 7 个工作日内", "书面形式，须用财政部质疑函范本", null], status: null,
-        refs: [{ page: 19, ch: "第二章 投标人须知", clause: "26.2 质疑", text: "可以在知道或者应知其权益受到损害之日起<mark>7 个工作日内</mark>，以书面形式向采购人、采购代理机构提出质疑。" }] }
-    ]
-  },
-
-  ht: {
-    title: "合同要点",
-    cols: ["条款", "内容", "提示", "出处"],
-    rows: [
-      { cells: ["预付款", "签约后 7 天内支付，不低于签约酬金的 20%", "具体比例在文件中为空白", null], status: "check",
-        refs: [{ page: 55, ch: "第六章 拟签订的合同文本", clause: "8.2.2 预付款", text: "发包人应当在双方签订合同后 7 天内……向监理人支付预付款，<mark>预付款额度应不低于签约酬金的 20%</mark>，具体额度为签约酬金的 %（具体金额： 元）。" }] },
-      { cells: ["中期支付", "已完成工程量达到 80% 以上时，支付至签约酬金的 70%", "付款时间以财政拨付为准", null], status: null,
-        refs: [{ page: 55, ch: "第六章 拟签订的合同文本", clause: "8.2.3 中期支付", text: "■其他：1.<mark>已完成工程量达到 80% 以上时，支付至签约酬金的 70%</mark>；" }] },
-      { cells: ["财政拨付延迟", "因政府资金拨付延迟导致不能按期付款，不构成发包人违约", "回款风险，建议投标前评估", null], status: "check",
-        refs: [{ page: 56, ch: "第六章 拟签订的合同文本", clause: "8.2.3 支付约定 4", text: "但<mark>因政府资金拨付延迟而导致发包人不能按照合同的约定及时向监理人支付合同价款时，不构成发包人的违约行为</mark>，监理人不得因此追究发包人违约责任。" }] },
-      { cells: ["预算调整解约", "预算调整时发包人可提前一个月书面通知解除合同，双方互不担责", "", null], status: "check",
-        refs: [{ page: 56, ch: "第六章 拟签订的合同文本", clause: "8.2.3 支付约定 2", text: "若本合同生效后因政府采购预算调整，发包人有权根据预算安排情况，<mark>提前一个月书面通知监理人解除合同</mark>，双方视为政策调整等不可抗力，双方互不承担违约责任。" }] },
-      { cells: ["结算", "需财政审计的，按审计结果结算", "", null], status: null,
-        refs: [{ page: 56, ch: "第六章 拟签订的合同文本", clause: "8.2.3 支付约定 3", text: "如本协议项目资金需进行财政审计，则<mark>最终按照财政审计结果进行结算</mark>。" }] },
-      { cells: ["更换总监", "须提前 14 天书面报告并经发包人同意", "承诺的总监不到位属监理人违约", null], status: null,
-        refs: [{ page: 48, ch: "第六章 拟签订的合同文本", clause: "7.1.2", text: "监理人更换总监理工程师时，应当<mark>提前 14 天向发包人书面报告</mark>，经发包人同意后方可更换。" }] },
-      { cells: ["履约保证金", "投标函写明中标后须提交", "金额和形式：文件中未找到", null], status: "check",
-        refs: [{ page: 69, ch: "第七章 投标文件格式", clause: "投标函", text: "……如我方中标，将按照招标文件规定<mark>提交履约保证金</mark>，并在合同约定的期限内完成合同规定的全部义务。" }] }
-    ]
-  }
-};
-
 const TAB_ORDER = ["fb", "pf", "cl", "kw", "sj", "ht", "ask"];
-
-// 提问框的预设问答，trace 是工具调用顺序
-const QA = [
-  {
-    keys: ["能不能投", "能投", "资格", "够不够"],
-    q: "我们公司能不能投？",
-    trace: [
-      ["read_company", "读取 company.yaml：资质、总监、业绩、保证金"],
-      ["search_section", "章节=资格审查，检索「特定资格要求」"],
-      ["search_section", "章节=投标人须知，检索「无效」「保证金」「有效期」"],
-      ["follow_reference", "资格审查 3-1 与 投标邀请 二（4）为同一要求，合并两处页码"]
-    ],
-    answer: "目前有一项资格不满足：拟派总监的注册专业是房屋建筑工程，文件要求<b>注册专业为市政公用工程</b>，并要有总监任命书 [[22]] [[2]]。这一项不满足，资格审查不合格，投标无效 [[21]]。其余资格条件（监理乙级资质、单独投标）满足；保证金保函尚未开具，需在截止前提交 [[16]]。是否投标由你决定。",
-    refs: [
-      { page: 21, ch: "第三章 资格审查", clause: "一、资格审查程序 3", text: "投标人《资格证明文件》<mark>有任何一项不符合《资格审查要求》的，资格审查不合格，其投标无效</mark>。" }
-    ]
-  },
-  {
-    keys: ["保证金"],
-    q: "投标保证金多少？用什么形式交？",
-    trace: [
-      ["search_section", "章节=投标人须知，检索「投标保证金」"],
-      ["follow_reference", "正文 12.1「按《投标人须知资料表》规定的金额」，跳到资料表 12.1"]
-    ],
-    answer: "01 包投标保证金为 <b>8000 元</b>，推荐用保函（保险）提交；确需转账或支票的，要向代理机构提交情况说明 [[8]]。保函原件或款项须在投标截止前到达，否则投标无效 [[16]]。合同里的「履约保证金」是中标后另交的，不是这笔。"
-  },
-  {
-    keys: ["价格分", "基准价", "报价", "多少分"],
-    q: "如果评标基准价是 42 万元，我报 45 万元，价格分多少？",
-    trace: [
-      ["search_section", "章节=评标办法，检索「价格分」「评标基准价」"],
-      ["calc_price_score", "base=42, bid=45, full=30  ->  42 / 45 × 30 = 28.00"]
-    ],
-    answer: "按评分办法的公式，价格分 =（评标基准价 / 投标报价）× 30 = 42 ÷ 45 × 30 = <b>28.00 分</b>（保留两位小数）[[31]]。这里的报价指修正和政策价格调整之后的报价。"
-  },
-  {
-    keys: ["联合体"],
-    q: "能不能联合体投标？",
-    trace: [
-      ["search_section", "章节=投标邀请，检索「联合体」"]
-    ],
-    answer: "<b>不能</b>。投标邀请中「本项目是否接受联合体投标」勾选的是「否」[[1]]。"
-  },
-  {
-    keys: ["踏勘", "现场考察", "答疑会"],
-    q: "要不要现场踏勘？",
-    trace: [
-      ["search_section", "章节=投标人须知，检索「踏勘」「现场考察」"],
-      ["follow_reference", "正文 3.1「若《投标人须知资料表》中规定了组织现场考察」，跳到资料表 3.1"]
-    ],
-    answer: "<b>不需要</b>。资料表 3.1 勾选的是「不组织」现场考察、「不召开」开标前答疑会 [[7]]。正文只写了「若资料表规定组织」时怎么办，以资料表为准 [[10]]。",
-    refs: [
-      { page: 7, ch: "第二章 投标人须知", clause: "投标人须知资料表 3.1", text: "现场考察 / 开标前答疑会：<mark>■不组织</mark> □组织……<mark>■不召开</mark> □召开……" },
-      { page: 10, ch: "第二章 投标人须知", clause: "正文 3.1", text: "若《投标人须知资料表》中规定了组织现场考察、召开开标前答疑会，则投标人应按要求在规定的时间和地点参加……" }
-    ]
-  },
-  {
-    keys: ["审计报告", "财务报表", "财务"],
-    q: "需要提供近三年财务审计报告吗？",
-    trace: [
-      ["search_section", "章节=资格审查，检索「审计报告」「财务」"],
-      ["search_section", "章节=投标文件格式，检索「财务」"]
-    ],
-    answer: "资格审查和投标文件格式里<b>都没有要求单独提供财务审计报告</b>。与财务相关的只有《投标人资格声明书》中的承诺「具有良好的商业信誉和健全的财务会计制度」[[68]]。",
-    refs: [
-      { page: 68, ch: "第七章 投标文件格式", clause: "投标人资格声明书", text: "在参与本次项目投标中，我单位承诺：（一）具有良好的商业信誉和<mark>健全的财务会计制度</mark>；（二）具有履行合同所必需的设备和专业技术能力；……" }
-    ]
-  }
+const PRESETS = [
+  "投标保证金多少？",
+  "能不能联合体投标？",
+  "我们公司能不能投？",
+  "如果评标基准价是 42 万元，我报 45 万元，价格分多少？"
 ];
+const STATUS = {
+  "满足": ["ok", "满足"],
+  "不满足": ["bad", "不满足"],
+  "人工看": ["check", "人工看"],
+  "无须提供": ["info", "无须提供"]
+};
 
+const DATA = {};
+TAB_DEFS.forEach(function (def) {
+  DATA[def.key] = { title: def.title, cols: def.cols, rows: [] };
+});
+
+let jobId = null;
+let pollTimer = null;
+let tableSig = "";
 let currentTab = "fb";
 let selectedKey = null;
+let shownSig = "";
 let viewMode = "page";
 let currentRefs = [];
 let currentLabel = "";
 
-function boxFor(ref) {
-  if (!ref || !ref.page) return null;
-  if (ref.bbox) return ref.bbox;
-  let h = 0;
-  const s = String(ref.page) + (ref.clause || "") + (ref.text || "");
-  for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) >>> 0;
-  return { x: 8, y: 16 + (h % 62), w: 84, h: 10 };
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+  });
 }
 
 function el(tag, attrs, html) {
-  const e = document.createElement(tag);
-  if (attrs) Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
-  if (html !== undefined) e.innerHTML = html;
-  return e;
+  const node = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(function (pair) { node.setAttribute(pair[0], pair[1]); });
+  if (html !== undefined) node.innerHTML = html;
+  return node;
 }
 
-function srcHtml(refs) {
-  return refs.map((r, i) => {
-    const hop = i > 0 ? '<span class="hop">→ </span>' : "";
-    return '<div class="src">' + hop + "p." + r.page + " " + r.ch.split(" ")[0] + "</div>";
-  }).join("");
+function mapRef(ref) {
+  const box = ref && ref.bbox && ref.bbox.length === 4 ? ref.bbox : null;
+  return {
+    page: ref ? ref.page : null,
+    ch: (ref && ref.chapter) || "",
+    clause: (ref && ref.clause) || "",
+    text: (ref && ref.text) || "",
+    bbox: box
+  };
+}
+
+function mapRow(def, raw) {
+  const verdict = raw.verdict || "";
+  return {
+    star: !!raw.star,
+    cells: def.cells(raw).map(function (cell) { return cell == null ? "" : String(cell); }),
+    status: STATUS[verdict] ? STATUS[verdict][0] : "",
+    refs: (raw.refs || []).map(mapRef)
+  };
+}
+
+function fillTables(job) {
+  TAB_DEFS.forEach(function (def) {
+    const rows = (job.tables && job.tables[def.table]) || [];
+    DATA[def.key].rows = rows.map(function (raw) { return mapRow(def, raw); });
+  });
 }
 
 function tagHtml(status) {
-  if (!status) return "";
-  const [cls, label] = S[status];
-  return '<span class="tag ' + cls + '">' + label + "</span>";
+  if (!status || !Object.values(STATUS).some(function (pair) { return pair[0] === status; })) return "";
+  const pair = Object.values(STATUS).find(function (item) { return item[0] === status; });
+  return '<span class="tag ' + pair[0] + '">' + pair[1] + "</span>";
+}
+
+function srcHtml(refs) {
+  return refs.map(function (ref, i) {
+    const hop = i > 0 ? '<span class="hop">→ </span>' : "";
+    return '<div class="src">' + hop + "p." + esc(ref.page) + " " + esc(ref.ch) + "</div>";
+  }).join("");
 }
 
 function problemCount(key) {
   if (key === "ask") return null;
-  return DATA[key].rows.filter(r => r.status === "bad" || r.status === "check").length;
+  return DATA[key].rows.filter(function (row) {
+    return row.status === "bad" || row.status === "check";
+  }).length;
 }
 
-function renderSteps(states) {
+function renderSteps(stages) {
   const box = document.getElementById("steps");
   box.innerHTML = "";
-  STEPS.forEach((s, i) => {
-    const st = states[i];
-    const label = st === "done" ? "完成" : st === "running" ? "进行中" : "等待";
-    box.appendChild(el("div", { class: "step " + st },
-      '<span class="state">' + label + '</span><div class="name">' + s.name + '</div><div class="scope">' + s.scope + "</div>"));
+  (stages || []).forEach(function (stage) {
+    const state = stage.state || "wait";
+    const label = state === "done" ? "完成" : state === "running" ? "进行中" : state === "error" ? "失败" : "等待";
+    box.appendChild(el("div", { class: "step " + state },
+      '<span class="state">' + label + "</span><div class=\"name\">" + esc(stage.name) +
+      '</div><div class="scope">' + esc(stage.detail || stage.scope) + "</div>"));
   });
 }
 
 function renderTabs() {
   const box = document.getElementById("tabs");
   box.innerHTML = "";
-  TAB_ORDER.forEach(key => {
+  TAB_ORDER.forEach(function (key) {
     const title = key === "ask" ? "提问" : DATA[key].title;
-    const n = problemCount(key);
-    const badge = n === null ? "" : '<span class="count' + (n === 0 ? " zero" : "") + '">' + n + "</span>";
-    const t = el("div", { class: "tab" + (key === currentTab ? " active" : "") }, title + badge);
-    t.onclick = () => { currentTab = key; renderAll(); };
-    box.appendChild(t);
+    const count = problemCount(key);
+    const badge = count === null ? "" : '<span class="count' + (count === 0 ? " zero" : "") + '">' + count + "</span>";
+    const tab = el("div", { class: "tab" + (key === currentTab ? " active" : "") }, esc(title) + badge);
+    tab.onclick = function () { currentTab = key; renderAll(); };
+    box.appendChild(tab);
   });
 }
 
@@ -761,17 +551,17 @@ function renderToolbar() {
   if (currentTab === "ask") { bar.style.display = "none"; return; }
   bar.style.display = "flex";
   const rows = DATA[currentTab].rows;
-  const c = { ok: 0, bad: 0, check: 0, info: 0 };
-  rows.forEach(r => { if (r.status) c[r.status]++; });
-  let txt = "共 " + rows.length + " 条";
+  const counts = { ok: 0, bad: 0, check: 0, info: 0 };
+  rows.forEach(function (row) { if (row.status) counts[row.status] += 1; });
+  let text = "共 " + rows.length + " 条";
   if (currentTab === "fb" || currentTab === "cl") {
-    txt += " · " + tagHtml("bad") + " " + c.bad + " · " + tagHtml("check") + " " + c.check + " · " + tagHtml("ok") + " " + c.ok;
+    text += " · " + tagHtml("bad") + " " + counts.bad + " · " + tagHtml("check") + " " + counts.check + " · " + tagHtml("ok") + " " + counts.ok;
   }
-  if (currentTab === "fb") txt += " · <span class='star'>★</span> 实质性条款置顶";
-  if (currentTab === "pf") txt += " · 总分 100（价格 30 + 商务 10 + 技术 60）";
-  if (currentTab === "kw") txt += " · 只列出要填的位置，不代填";
-  txt += " · 有页码则翻页画框；无页码只标人工看。带 → 的表示条款引用跳转";
-  bar.innerHTML = txt;
+  if (currentTab === "fb") text += " · <span class='star'>★</span> 实质性条款置顶";
+  if (currentTab === "pf") text += " · 主观分不预估，价格分在提问里用代码算";
+  if (currentTab === "kw") text += " · 只列出要填的位置，不代填";
+  text += " · 有页码则翻页画框；无页码只标人工看。带 → 的表示条款引用跳转";
+  bar.innerHTML = text;
 }
 
 function renderTable() {
@@ -784,98 +574,89 @@ function renderTable() {
   }
   wrap.style.display = "block";
   ask.style.display = "none";
-  const d = DATA[currentTab];
+  const sheet = DATA[currentTab];
   const table = el("table");
-  const thead = el("thead");
-  thead.appendChild(el("tr", null, d.cols.map(c => "<th>" + c + "</th>").join("")));
-  table.appendChild(thead);
-  const tbody = el("tbody");
-  d.rows.forEach((r, i) => {
-    const key = currentTab + ":" + i;
-    const tds = d.cols.map((c, ci) => {
-      if (c === "出处") return "<td>" + (r.refs && r.refs.length ? srcHtml(r.refs) : '<span class="muted">无页码</span>') + "</td>";
-      if (c === "结论") return "<td>" + tagHtml(r.status) + "</td>";
-      let v = r.cells[ci] || "";
-      if (ci === 0 && r.star) v = '<span class="star">★</span>' + v;
-      if (c === "提示" && r.status) v = tagHtml(r.status) + " " + v;
-      return "<td>" + v + "</td>";
+  table.appendChild(el("thead", null, "<tr>" + sheet.cols.map(function (col) {
+    return "<th>" + esc(col) + "</th>";
+  }).join("") + "</tr>"));
+  const body = el("tbody");
+  sheet.rows.forEach(function (row, index) {
+    const key = currentTab + ":" + index;
+    const cells = sheet.cols.map(function (col, ci) {
+      if (col === "出处") {
+        return "<td>" + (row.refs.length ? srcHtml(row.refs) : '<span class="muted">无页码</span>') + "</td>";
+      }
+      if (col === "结论") return "<td>" + tagHtml(row.status) + "</td>";
+      let value = esc(row.cells[ci] || "");
+      if (ci === 0 && row.star) value = '<span class="star">★</span>' + value;
+      if (col === "提示" && row.status) value = tagHtml(row.status) + " " + value;
+      return "<td>" + value + "</td>";
     }).join("");
-    const tr = el("tr", { class: key === selectedKey ? "selected" : "" }, tds);
-    tr.onclick = () => {
+    const tr = el("tr", { class: key === selectedKey ? "selected" : "" }, cells);
+    tr.onclick = function () {
       selectedKey = key;
+      shownSig = "";
       renderTable();
-      showRefs(r.refs, (r.star ? "★ " : "") + (r.cells[0] || ""), r.status);
+      showRefs(row.refs, (row.star ? "★ " : "") + (row.cells[0] || ""), row.status);
     };
-    tbody.appendChild(tr);
+    body.appendChild(tr);
   });
-  table.appendChild(tbody);
+  table.appendChild(body);
   wrap.innerHTML = "";
   wrap.appendChild(table);
 }
 
-function fillerLines(ch) {
-  const lines = [
-    "投标人应仔细阅读招标文件的全部内容，按要求编制投标文件。",
-    "本章所述条款与前附表不一致的，以前附表为准。",
-    "未在本章列明的事项，按政府采购相关法律法规执行。",
-    "投标文件应对招标文件的要求作出实质性响应。",
-    "采购人有权对投标文件的真实性进行核查。"
-  ];
-  return lines.map((t, i) =>
-    '<div class="pfiller" style="top:' + (14 + i * 7) + '%">' + (ch || "招标文件") + "　" + t + "</div>"
-  ).join("");
+function renderAll() {
+  renderTabs();
+  renderToolbar();
+  renderTable();
 }
 
-function renderPaper(ref) {
-  const box = boxFor(ref);
-  const wrap = el("div", { class: "paper-wrap" });
-  const paper = el("div", { class: "paper" });
-  paper.innerHTML =
-    '<div class="ph">2026年区管城市道路健康工程（监理服务）招标文件　示意页图，非真实渲染</div>' +
-    '<div class="pch">' + (ref.ch || "") + "</div>" +
-    fillerLines(ref.ch) +
-    '<div class="pno">— ' + ref.page + " —</div>";
-  if (box) {
-    const hl = el("div", { class: "hl" }, ref.text);
-    hl.style.left = box.x + "%";
-    hl.style.top = box.y + "%";
-    hl.style.width = box.w + "%";
-    hl.style.height = box.h + "%";
-    paper.appendChild(hl);
-  }
-  wrap.appendChild(paper);
-  const meta = el("div", { class: "bbox-meta" });
-  if (box) {
-    meta.textContent = ref.clause + "　第 " + ref.page + " 页　bbox=(" +
-      box.x + "%, " + box.y + "%, " + box.w + "% × " + box.h + "%)　模拟 PyMuPDF 块坐标";
-  } else {
-    meta.textContent = "第 " + ref.page + " 页，无块坐标，不画框";
-  }
-  wrap.appendChild(meta);
-  return wrap;
+function pageUrl(ref) {
+  const query = new URLSearchParams();
+  if (ref.bbox) query.set("bbox", ref.bbox.join(","));
+  return "/api/jobs/" + jobId + "/pages/" + ref.page + "?" + query.toString();
 }
 
-function showPageView(v, refs) {
-  refs.forEach((r, i) => {
-    if (i > 0) v.appendChild(el("div", { class: "hop-arrow" }, "follow_reference 跳转 ↓"));
-    v.appendChild(renderPaper(r));
+function showPageView(view, refs) {
+  refs.forEach(function (ref, index) {
+    if (index > 0) view.appendChild(el("div", { class: "hop-arrow" }, "follow_reference 跳转 ↓"));
+    const wrap = el("div", { class: "shot-wrap" });
+    const img = document.createElement("img");
+    img.alt = "第 " + ref.page + " 页";
+    img.src = pageUrl(ref);
+    wrap.appendChild(img);
+    const meta = el("div", { class: "bbox-meta" });
+    const box = ref.bbox ? "　bbox=" + ref.bbox.map(function (n) { return Number(n).toFixed(1); }).join(",") : "　无块坐标，不画框";
+    meta.textContent = (ref.clause || ref.ch || "") + "　第 " + ref.page + " 页" + box;
+    wrap.appendChild(meta);
+    view.appendChild(wrap);
   });
 }
 
-function showTextView(v, refs) {
-  const byCh = {};
-  refs.forEach(r => {
-    const k = r.ch || "未分章";
-    if (!byCh[k]) byCh[k] = [];
-    byCh[k].push(r);
+function showTextView(view, refs) {
+  const grouped = {};
+  refs.forEach(function (ref) {
+    const key = ref.ch || "未分章";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(ref);
   });
-  Object.keys(byCh).forEach(ch => {
-    const pages = byCh[ch].map(r => r.page).filter(Boolean);
+  Object.keys(grouped).forEach(function (chapter) {
+    const pages = grouped[chapter].map(function (ref) { return ref.page; }).filter(Boolean);
     const span = pages.length ? " · p." + Math.min.apply(null, pages) + "–" + Math.max.apply(null, pages) : "";
-    v.appendChild(el("div", { class: "sec-bar" }, ch + span + "　解析文本，用来核对章节切分"));
-    byCh[ch].forEach(r => {
-      v.appendChild(el("div", { class: "page" },
-        '<div class="meta"><span>' + r.clause + '</span><span>第 ' + r.page + " 页</span></div>" + r.text));
+    view.appendChild(el("div", { class: "sec-bar" }, esc(chapter + span) + "　解析文本"));
+    grouped[chapter].forEach(function (ref) {
+      const block = el("div", { class: "page" });
+      const meta = el("div", { class: "meta" });
+      const left = el("span");
+      left.textContent = ref.clause || "";
+      const right = el("span");
+      right.textContent = ref.page ? "第 " + ref.page + " 页" : "";
+      meta.appendChild(left);
+      meta.appendChild(right);
+      block.appendChild(meta);
+      block.appendChild(document.createTextNode(ref.text || ""));
+      view.appendChild(block);
     });
   });
 }
@@ -883,22 +664,23 @@ function showTextView(v, refs) {
 function showRefs(refs, label, status) {
   currentRefs = refs || [];
   currentLabel = label || "";
-  const v = document.getElementById("viewer");
+  shownSig = selectedKey + JSON.stringify(currentRefs);
+  const view = document.getElementById("viewer");
   const sub = document.getElementById("viewer-sub");
-  v.innerHTML = "";
-  const usable = currentRefs.filter(r => r.page);
+  view.innerHTML = "";
+  const usable = currentRefs.filter(function (ref) { return ref.page; });
   if (!usable.length) {
     sub.textContent = (label || "未选择") + "　无页码，不画框";
-    v.appendChild(el("div", { class: "empty" },
-      "没有页码或块坐标，标「人工看」，不翻页、不画框。" +
+    view.appendChild(el("div", { class: "empty" },
+      "没有页码，标「人工看」，不翻页、不画框。" +
       (status === "check" ? " 这一行需要对照原件人工确认。" : "")));
-    v.scrollTop = 0;
+    view.scrollTop = 0;
     return;
   }
   sub.textContent = label + "　" + (viewMode === "page" ? "原件按页" : "解析文本");
-  if (viewMode === "page") showPageView(v, usable);
-  else showTextView(v, usable);
-  v.scrollTop = 0;
+  if (viewMode === "page") showPageView(view, usable);
+  else showTextView(view, usable);
+  view.scrollTop = 0;
 }
 
 function setViewMode(mode) {
@@ -908,133 +690,197 @@ function setViewMode(mode) {
   if (currentLabel || currentRefs.length) showRefs(currentRefs, currentLabel);
 }
 
-function findRefByPage(page) {
-  for (const key of Object.keys(DATA)) {
-    for (const r of DATA[key].rows) {
-      for (const ref of r.refs) if (ref.page === page) return ref;
-    }
+function showError(message) {
+  const box = document.getElementById("job-error");
+  box.style.display = message ? "block" : "none";
+  box.textContent = message || "";
+}
+
+function setBusy(running) {
+  document.getElementById("btn-run").disabled = running;
+  document.getElementById("btn-sample").disabled = running;
+}
+
+function applyJob(job) {
+  renderSteps(job.stages);
+  document.getElementById("file-name").textContent = job.file_name || "未选择";
+  document.getElementById("company-name").textContent = job.company_name || "company.yaml";
+  const meta = [];
+  if (job.page_count) meta.push(job.page_count + " 页");
+  if (job.sections && job.sections.length) meta.push(job.sections.length + " 章");
+  if (job.missing && job.missing.length) meta.push("缺 " + job.missing.join("、"));
+  document.getElementById("file-meta").textContent = meta.length ? "· " + meta.join(" · ") : "";
+  setBusy(job.status === "running");
+  document.getElementById("btn-export").disabled = job.status !== "done";
+  showError(job.status === "error" ? job.error : "");
+  const sig = JSON.stringify(job.tables || {}) + "|" + (job.missing || []).join(",");
+  if (sig === tableSig) return;
+  tableSig = sig;
+  fillTables(job);
+  renderAll();
+  if (!selectedKey) return;
+  const parts = selectedKey.split(":");
+  const row = DATA[parts[0]] && DATA[parts[0]].rows[Number(parts[1])];
+  if (!row) return;
+  const nextSig = selectedKey + JSON.stringify(row.refs);
+  if (nextSig !== shownSig) showRefs(row.refs, (row.star ? "★ " : "") + (row.cells[0] || ""), row.status);
+}
+
+async function poll() {
+  const response = await fetch("/api/jobs/" + jobId);
+  const job = await response.json();
+  if (!response.ok) {
+    showError(job.error || "读取进度失败");
+    setBusy(false);
+    return;
   }
-  return null;
+  applyJob(job);
+  if (job.status === "running") pollTimer = setTimeout(poll, 1200);
+}
+
+async function begin(sample) {
+  showError("");
+  const company = document.getElementById("company-yaml").value;
+  let response;
+  if (sample) {
+    response = await fetch("/api/check/sample", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ company: company })
+    });
+  } else {
+    const file = document.getElementById("pdf-file").files[0];
+    if (!file) {
+      showError("请先选择 PDF，或改用东城道路样本");
+      return;
+    }
+    const form = new FormData();
+    form.append("pdf", file);
+    form.append("company", company);
+    response = await fetch("/api/check", { method: "POST", body: form });
+  }
+  const body = await response.json();
+  if (!response.ok) {
+    showError(body.error || "无法开始核对");
+    return;
+  }
+  if (pollTimer) clearTimeout(pollTimer);
+  jobId = body.job_id;
+  history.replaceState(null, "", "/?job=" + jobId);
+  tableSig = "";
+  selectedKey = null;
+  shownSig = "";
+  currentRefs = [];
+  currentLabel = "";
+  document.getElementById("viewer").innerHTML = '<div class="empty">核对进行中。表出来之后，点一行看原件。</div>';
+  setBusy(true);
+  poll();
 }
 
 function renderPresets() {
   const box = document.getElementById("presets");
   box.innerHTML = "";
-  QA.forEach(item => {
-    const b = el("button", null, item.q);
-    b.onclick = () => ask(item.q);
-    box.appendChild(b);
+  PRESETS.forEach(function (text) {
+    const button = el("button", { type: "button" }, esc(text));
+    button.onclick = function () { ask(text); };
+    box.appendChild(button);
   });
 }
 
-function ask(text) {
-  text = text.trim();
+function answerHtml(text) {
+  return esc(text).replace(/\[p\.(\d+)\]/g, function (_, page) {
+    return '<span class="cite" data-page="' + page + '">[p.' + page + "]</span>";
+  });
+}
+
+async function ask(text) {
+  text = (text || "").trim();
   if (!text) return;
   const log = document.getElementById("ask-log");
   if (log.querySelector(".empty")) log.innerHTML = "";
-  log.appendChild(el("div", { class: "msg q" }, "<span></span>"));
-  log.lastChild.querySelector("span").textContent = text;
-
-  const hit = QA.find(item => item.q === text || item.keys.some(k => text.includes(k)));
-  const trace = hit ? hit.trace : [
-    ["search_section", "按问题判断章节：未能对应到具体章节，改为在投标人须知和投标邀请中检索"],
-    ["search_section", "检索结果相关度低于阈值"]
-  ];
-  const answer = hit ? hit.answer : "<b>文件中未找到</b>与这个问题对应的内容。";
-
+  const question = el("div", { class: "msg q" });
+  const span = document.createElement("span");
+  span.textContent = text;
+  question.appendChild(span);
+  log.appendChild(question);
+  if (!jobId) {
+    log.appendChild(el("div", { class: "answer" }, "请先开始核对。"));
+    return;
+  }
   const box = el("div", { class: "msg" });
-  const tr = el("div", { class: "trace" });
-  box.appendChild(tr);
+  const trace = el("div", { class: "trace" });
+  box.appendChild(trace);
   log.appendChild(box);
-
-  let i = 0;
-  const tick = () => {
-    if (i < trace.length) {
-      tr.appendChild(el("div", null, "<code>" + trace[i][0] + "</code> " + trace[i][1]));
-      i++;
-      log.scrollTop = log.scrollHeight;
-      setTimeout(tick, 350);
-    } else {
-      const html = answer.replace(/\[\[(\d+)\]\]/g, (m, p) => '<span class="cite" data-page="' + p + '">[p.' + p + "]</span>");
-      const a = el("div", { class: "answer" }, html);
-      a.querySelectorAll(".cite").forEach(c => {
-        c.onclick = () => {
-          const page = Number(c.dataset.page);
-          const own = hit && hit.refs ? hit.refs.find(x => x.page === page) : null;
-          const ref = own || findRefByPage(page);
-          if (ref) showRefs([ref], "提问引用的原文");
-        };
-      });
-      box.appendChild(a);
-      log.scrollTop = log.scrollHeight;
-    }
-  };
-  tick();
-}
-
-function renderAll() {
-  renderTabs();
-  renderToolbar();
-  renderTable();
-}
-
-function exportCsv() {
-  const key = currentTab === "ask" ? "fb" : currentTab;
-  const d = DATA[key];
-  const esc = s => '"' + String(s).replace(/<[^>]+>/g, "").replace(/"/g, '""') + '"';
-  const lines = [d.cols.map(esc).join(",")];
-  d.rows.forEach(r => {
-    lines.push(d.cols.map((c, ci) => {
-      if (c === "出处") return esc(r.refs.map(x => "p." + x.page + " " + x.ch + " " + x.clause).join("；"));
-      if (c === "结论") return esc(r.status ? S[r.status][1] : "");
-      return esc((ci === 0 && r.star ? "★" : "") + (r.cells[ci] || ""));
-    }).join(","));
+  log.scrollTop = log.scrollHeight;
+  const response = await fetch("/api/jobs/" + jobId + "/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: text })
   });
-  // 加 BOM，Excel 打开中文不乱码
-  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = d.title + ".csv";
-  a.click();
+  const out = await response.json();
+  if (!response.ok) {
+    box.appendChild(el("div", { class: "answer" }, esc(out.error || "提问失败")));
+    return;
+  }
+  (out.trace || []).forEach(function (step) {
+    const args = step.args ? JSON.stringify(step.args) : "";
+    trace.appendChild(el("div", null, "<code>" + esc(step.tool) + "</code> " + esc(args)));
+  });
+  const answer = el("div", { class: "answer" }, answerHtml(out.answer || ""));
+  answer.querySelectorAll(".cite").forEach(function (cite) {
+    cite.onclick = function () {
+      showRefs([{
+        page: Number(cite.dataset.page),
+        ch: "",
+        clause: "提问引用",
+        text: "",
+        bbox: null
+      }], "提问引用的原文");
+    };
+  });
+  box.appendChild(answer);
+  log.scrollTop = log.scrollHeight;
 }
 
-function runSteps() {
-  const states = STEPS.map(() => "wait");
-  renderSteps(states);
-  let i = 0;
-  const next = () => {
-    if (i > 0) states[i - 1] = "done";
-    if (i < STEPS.length) {
-      states[i] = "running";
-      renderSteps(states);
-      i++;
-      setTimeout(next, 450);
-    } else {
-      renderSteps(states);
-    }
-  };
-  next();
-}
-
-document.getElementById("btn-rerun").onclick = runSteps;
-document.getElementById("btn-export").onclick = exportCsv;
-document.getElementById("btn-page").onclick = () => setViewMode("page");
-document.getElementById("btn-text").onclick = () => setViewMode("text");
-document.getElementById("ask-send").onclick = () => {
-  const inp = document.getElementById("ask-text");
-  ask(inp.value);
-  inp.value = "";
+document.getElementById("btn-pick").onclick = function () {
+  document.getElementById("pdf-file").click();
 };
-document.getElementById("ask-text").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("ask-send").click();
+document.getElementById("pdf-file").onchange = function () {
+  const file = document.getElementById("pdf-file").files[0];
+  if (file) document.getElementById("file-name").textContent = file.name;
+};
+document.getElementById("btn-sample").onclick = function () { begin(true); };
+document.getElementById("btn-run").onclick = function () { begin(false); };
+document.getElementById("btn-export").onclick = function () {
+  if (jobId) window.location = "/api/jobs/" + jobId + "/export.xlsx";
+};
+document.getElementById("btn-page").onclick = function () { setViewMode("page"); };
+document.getElementById("btn-text").onclick = function () { setViewMode("text"); };
+document.getElementById("ask-send").onclick = function () {
+  const input = document.getElementById("ask-text");
+  ask(input.value);
+  input.value = "";
+};
+document.getElementById("ask-text").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") document.getElementById("ask-send").click();
 });
 
-renderSteps(STEPS.map(() => "done"));
 renderPresets();
 renderAll();
-selectedKey = "fb:5";
-renderTable();
-showRefs(DATA.fb.rows[5].refs, "★ " + DATA.fb.rows[5].cells[0], DATA.fb.rows[5].status);
+fetch("/api/meta").then(function (response) { return response.json(); }).then(function (meta) {
+  document.getElementById("company-yaml").value = meta.company || "";
+  const existing = new URLSearchParams(location.search).get("job");
+  if (existing) {
+    jobId = existing;
+    setBusy(true);
+    poll();
+    return;
+  }
+  renderSteps(meta.stages || []);
+}).catch(function () {
+  showError("页面需要通过 python main.py web 打开，直接打开这个文件读不到接口。");
+});
 </script>
+
 </body>
 </html>

@@ -8,7 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from rank_bm25 import BM25Okapi
 
-from tender.sections import section_of_page
+from tender.sections import TYPE_LABEL, section_of_page
 
 DEFAULT_INDEX_ROOT = Path(__file__).resolve().parent.parent / "data" / "tender_index"
 DEFAULT_EMBED_MODEL = "BAAI/bge-small-zh-v1.5"
@@ -152,11 +152,19 @@ class TenderIndex:
         return hits
 
 
-def build_tender_index(pages: list[dict], sections: list[dict], pdf_path: str) -> TenderIndex:
+def build_tender_index(pages: list[dict], sections: list[dict], pdf_path: str, on_chapter=None) -> TenderIndex:
     """切块并按类型建库。"""
     chunks = chunk_pages(pages, sections)
     grouped = {}
     for c in chunks:
         grouped.setdefault(c["section_type"], []).append(c)
-    stores = {typ: SectionIndex(items) for typ, items in grouped.items()}
+    print(f"切块 {len(chunks)} 段，开始按章建向量索引", flush=True)
+    stores = {}
+    for typ, items in grouped.items():
+        label = TYPE_LABEL.get(typ, typ)
+        print(f"  建库 {label}  {len(items)} 段", flush=True)
+        if on_chapter is not None:
+            on_chapter(label, len(items))
+        stores[typ] = SectionIndex(items)
+    print("索引建完", flush=True)
     return TenderIndex(stores, sections, str(pdf_path))
