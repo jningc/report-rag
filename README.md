@@ -62,7 +62,10 @@ tender/              核对主路径（解析 → 切章 → 按章检索 → �
   ask_box.py         提问框，最多 5 步工具循环
   llm.py             对话模型客户端
 sample/              虚构 company.yaml，样本 PDF 下载说明
-docs/                方案、效果演示
+static/              核对页面
+  index.html         效果演示页
+  vendor/            PDF.js（pdf.min.js、pdf.worker.min.js）
+docs/                方案
 data/                运行时索引和上传缓存（不进 Git）
 ```
 

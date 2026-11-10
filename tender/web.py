@@ -31,8 +31,8 @@ from tender.workflow import run_check
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE_PDF = ROOT / "sample" / "beijing_road.pdf"
 SAMPLE_COMPANY = ROOT / "sample" / "company.yaml"
-PAGE = ROOT / "效果演示.html"
-VENDOR = ROOT / "docs" / "vendor"
+PAGE = ROOT / "static" / "index.html"
+VENDOR = ROOT / "static" / "vendor"
 UPLOAD_ROOT = ROOT / "data" / "web_jobs"
 
 # 页面顶部进度条的固定顺序
