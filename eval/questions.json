@@ -1,0 +1,62 @@
+{
+  "_说明": "回归集种子：每条都是人工对着 PDF 原文核过的（页码=原文所在页）。它不是准确率全集，只锁住这 8 条事实别退化。",
+  "_schema": "keyword 在输出条目里出现；该条目的页码集合只要命中 expect_pages 任一项就算过。",
+  "questions": [
+    {
+      "id": "bj-bond",
+      "doc": "beijing_road",
+      "keyword": "投标保证金",
+      "expect_pages": [8],
+      "note": "12.1 投标保证金金额：01 包 8000 元（p8）"
+    },
+    {
+      "id": "bj-validity",
+      "doc": "beijing_road",
+      "keyword": "投标有效期",
+      "expect_pages": [8, 18],
+      "note": "13.1 自提交投标文件截止之日起 90 日历天（p8 / p18）"
+    },
+    {
+      "id": "bj-cap",
+      "doc": "beijing_road",
+      "keyword": "最高限价",
+      "expect_pages": [3, 8, 26],
+      "note": "01 包最高限价 47.130349 万元（p3）"
+    },
+    {
+      "id": "bj-qualify",
+      "doc": "beijing_road",
+      "keyword": "乙级",
+      "expect_pages": [4, 25, 78],
+      "note": "市政公用工程专业资质乙级及以上（p4 / p25 资格审查 3-1）"
+    },
+    {
+      "id": "bj-decrypt",
+      "doc": "beijing_road",
+      "keyword": "解密",
+      "expect_pages": [8],
+      "note": "18.2 解密时间 30 分钟（p8）"
+    },
+    {
+      "id": "bj-bid-committee",
+      "doc": "beijing_road",
+      "keyword": "评标委员会",
+      "expect_pages": [19],
+      "note": "20.1 评标委员会组建与职责（p19）"
+    },
+    {
+      "id": "bj-performance-bond",
+      "doc": "beijing_road",
+      "keyword": "履约保证金",
+      "expect_pages": [83],
+      "note": "只在投标书模板里出现，无具体条款（p83）——考的是「找不到就别编」"
+    },
+    {
+      "id": "bj-doc-parts",
+      "doc": "beijing_road",
+      "keyword": "组成",
+      "expect_pages": [19],
+      "note": "17.2 投标文件补充修改作为组成部分（p19）"
+    }
+  ]
+}

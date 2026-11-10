@@ -71,3 +71,14 @@ data/                运行时索引和上传缓存（不进 Git）
 扫描件 OCR、Word 招标文件、工程量清单、围串标、资质在线验真、自动写技术方案正文。
 
 旧的报销制度影响面对照不在本分支。完整代码在 tag `v-impact-baseline` 和分支 `feat/policy-impact`。
+
+## 评测
+
+`eval/questions.json` 是人工对着 PDF 原文核过页码的题集（当前 8 条，覆盖三份样本用），
+`eval/compare.py` 拿一次 check 的文本输出直接打分，不调模型：
+
+```bash
+python eval/compare.py data/step_output/beijing_road/04_check.txt -v
+```
+
+它报三个数：抽到了没（absent）、出处对不对（miss）、全对（hit）。
