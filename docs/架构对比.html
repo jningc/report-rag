@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>两种切法</title>
+<style>
+  :root {
+    --ink: var(--foreground, #1c1c1e);
+    --dim: var(--muted-foreground, #6b6b73);
+    --line: var(--border, rgba(128,128,140,.32));
+    --box: var(--card, transparent);
+    --hi: var(--accent, #7c5cff);
+  }
+  .wrap { max-width: 880px; color: var(--ink); font-size: 14px; line-height: 1.6; }
+  h1 { font-size: 19px; margin: 0 0 4px; letter-spacing: .01em; }
+  .sub { color: var(--dim); margin: 0 0 22px; font-size: 13px; }
+  h2 { font-size: 14px; margin: 26px 0 10px; display: flex; align-items: center; gap: 8px; }
+  h2 .tag { font-size: 11px; font-weight: 500; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); }
+  h2.new .tag { border-color: var(--hi); color: var(--hi); }
+
+  /* 通用盒子 */
+  .card { border: 1px solid var(--line); background: var(--box); border-radius: 9px; padding: 9px 12px; }
+  .card .t { font-weight: 600; font-size: 13px; }
+  .card .d { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .chip { font-size: 11.5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 99px; color: var(--dim); white-space: nowrap; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+
+  /* 现状：横排四个兄弟 */
+  .inputs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .statebar { margin: 8px 0 14px; border-left: 2px solid var(--hi); padding: 3px 0 3px 10px; color: var(--dim); font-size: 12.5px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .node { position: relative; text-align: center; padding: 10px 4px; }
+  .node .t { font-size: 13px; }
+  .node .self { font-size: 11px; color: var(--dim); margin-top: 4px; border-top: 1px dashed var(--line); padding-top: 5px; }
+  .node .n { font-size: 10.5px; color: var(--dim); }
+  .arrow-down { color: var(--dim); text-align: center; font-size: 15px; line-height: 1; margin: 8px 0; }
+  .out { text-align: center; padding: 10px; border-style: dashed; }
+  .bracket { position: relative; height: 16px; margin: 0 12px; }
+  .bracket::before { content: ""; position: absolute; inset: 0 0 auto 0; border-top: 1px solid var(--line); }
+  .counter { margin-top: 10px; font-size: 12.5px; color: var(--dim); }
+  .counter b { color: var(--ink); font-weight: 600; }
+
+  /* 升级：竖排流水线 */
+  .pipeline { display: grid; grid-template-columns: 1fr 196px; column-gap: 16px; row-gap: 0; align-items: stretch; }
+  .stage { grid-column: 1; }
+  .stage .t { display: flex; align-items: baseline; gap: 7px; }
+  .stage .t .idx { font-size: 10.5px; color: var(--hi); font-weight: 700; letter-spacing: .08em; }
+  .stage .io { font-size: 11.5px; color: var(--dim); margin-top: 3px; }
+  .stage .io code { font-size: 11px; color: var(--ink); }
+  .conn { grid-column: 1; display: flex; align-items: center; gap: 8px; padding: 5px 0 5px 14px; color: var(--dim); }
+  .conn .line { width: 1px; height: 18px; background: var(--line); }
+  .conn .lab { font-size: 10.5px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+  .rail { grid-column: 2; grid-row: 3 / span 6; align-self: stretch; display: flex; }
+  .rail .card { flex: 1; border-style: dashed; display: flex; flex-direction: column; justify-content: flex-start; gap: 8px; padding-top: 16px; }
+  .rail .to { font-size: 11px; color: var(--hi); }
+  .rail .to::before { content: "← "; }
+  .final { grid-column: 1 / -1; text-align: center; padding: 10px; border-color: var(--hi); }
+
+  /* 进化回路 */
+  .loop { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; }
+  .loop .step { border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; }
+  .loop .sep { color: var(--dim); }
+  .loop .ok { border-color: var(--hi); color: var(--hi); }
+  .loop .back { color: var(--dim); font-size: 11.5px; }
+
+  /* 对比表 */
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 6px; font-size: 12.5px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; color: var(--dim); font-weight: 500; }
+  td:first-child { color: var(--dim); width: 88px; }
+  tr.hi td { background: color-mix(in srgb, var(--hi) 7%, transparent); }
+  .foot { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--dim); font-size: 12.5px; }
+</style>
+
+<div class="wrap">
+  <h1>同一条链路，两种切法</h1>
+  <p class="sub">上：现在的实现（<span class="mono">tender/workflow.py</span> 实况）。下：升级后的目标态。外部输入输出、页面、命令行三段都不变。</p>
+
+  <h2><span class="tag">现在</span>按问题横着切 · 四个平行的核对面</h2>
+  <div class="inputs">
+    <span class="chip">招标 PDF</span>
+    <span class="chip">BM25 + FAISS（按章分库）</span>
+    <span class="chip">company.yaml</span>
+  </div>
+  <div class="statebar">共享一个 State：原文 + 索引 + company，哪个节点用就自己取</div>
+  <div class="row">
+    <div class="card node"><div class="t">废标</div><div class="self">自己搜：公告 + 须知 + 资格</div></div>
+    <div class="card node"><div class="t">评分</div><div class="self">自己搜：评标办法</div></div>
+    <div class="card node"><div class="t">材料</div><div class="self">自己搜：须知 + 资格 + 格式</div></div>
+    <div class="card node"><div class="t">空位</div><div class="self">自己搜：投标文件格式</div></div>
+    <div class="card node"><div class="t">辅助</div><div class="self">时间节点 / 合同要点</div></div>
+  </div>
+  <div class="arrow-down">↓</div>
+  <div class="card out">六张表 + 提问框</div>
+  <div class="counter">四个核对面<b>平级、彼此不传东西</b>；同一段原文被<b>读 4 遍</b>；表填错了，<b>不知道是解析错还是抽取错还是比对错</b>。</div>
+
+  <h2 class="new"><span class="tag">升级后</span>按阶段竖着切 · 数据逐级收敛</h2>
+  <div class="pipeline">
+    <div class="card stage">
+      <div class="t"><span class="idx">01</span>解析</div>
+      <div class="io">出 <code>章节树 + 表格结构 + 页码/bbox</code></div>
+    </div>
+    <div class="conn"><span class="line"></span><span class="lab mono">JSON</span></div>
+
+    <div class="card stage">
+      <div class="t"><span class="idx">02</span>抽取</div>
+      <div class="io">出 <code>条款清单</code>，每条带出处（页码 + 坐标）。<b>全文只在这里检索一次</b></div>
+    </div>
+    <div class="conn"><span class="line"></span><span class="lab mono">JSON</span></div>
+
+    <div class="card stage">
+      <div class="t"><span class="idx">03</span>比对</div>
+      <div class="io">只对条款清单 + <code>company.yaml</code>，不碰原文 → 出 <code>差异清单</code>（符合 / 偏离 / 缺失）</div>
+    </div>
+    <div class="conn"><span class="line"></span><span class="lab mono">JSON</span></div>
+
+    <div class="card stage">
+      <div class="t"><span class="idx">04</span>校验</div>
+      <div class="io">唯一职责：这条结论的证据够不够，不够就退回</div>
+    </div>
+    <div class="conn"><span class="line"></span><span class="lab mono">JSON</span></div>
+
+    <div class="card final">核对报告（六张表 + 提问框，外面对它的看法不变）</div>
+
+    <div class="rail">
+      <div class="card">
+        <div class="t">规则库</div>
+        <div class="d">结构化：触发条件 + 动作。不是「心得体会」。</div>
+        <div class="to">注入 抽取</div>
+        <div class="to">注入 比对</div>
+      </div>
+    </div>
+  </div>
+  <div class="counter">原文<b>只读 1 遍</b>；后一段只信前一段的格式，不回头翻 PDF；错了能指到具体一段。</div>
+
+  <div class="loop">
+    <span class="step">跑完一轮</span><span class="sep">→</span>
+    <span class="step">人工确认错误</span><span class="sep">→</span>
+    <span class="step">归因到某一段</span><span class="sep">→</span>
+    <span class="step">提炼规则</span><span class="sep">→</span>
+    <span class="step">注入</span><span class="sep">→</span>
+    <span class="step">题集全量重跑</span><span class="sep">→</span>
+    <span class="step ok">涨 = 生效</span><span class="sep">/</span>
+    <span class="step ok">掉 = 回滚</span>
+    <div class="back">上面这条回边，就是「自进化」；没有最后的重跑，前两步都能造假。</div>
+  </div>
+
+  <h2>同一个例子，走两条路</h2>
+  <div class="card" style="margin-bottom:12px">
+    <div class="t">样本：sample/beijing_road.pdf，第 8 页（投标人须知资料表 12.1）</div>
+    <div class="mono" style="margin-top:6px; color:var(--ink)">投标保证金金额：01 包：8000 元；可采用下列形式之一：(1) 保函（推荐）(2) 支票 (3) 汇款</div>
+    <div class="d">「投标保证金」这份文件里出现五次，五个角色（下面页码都已对着 PDF 核过）：</div>
+  </div>
+  <div class="inputs" style="margin-bottom:14px">
+    <span class="chip">p8 · 金额 + 三选一形式 + 不予退还情形</span>
+    <span class="chip">p17 · 交纳规则（未按要求缴纳 → 投标无效）</span>
+    <span class="chip">p25 · 资格审查表里的要求</span>
+    <span class="chip">p27 · 围串标情形</span>
+    <span class="chip">p79 · 格式章：交款单据空位</span>
+    <span class="chip">p83 · 投标书模板里的「履约保证金」（另一个东西）</span>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <div class="t">现在：五个节点各搜各的</div>
+      <div class="d" style="margin-top:6px">
+        废标节点搜到 p17，收一行「未按要求缴纳 → 无效」；<br>
+        材料节点搜到 p79，收一行「交款单据」；<br>
+        空位节点翻格式章，撞上 p83 的「履约保证金」也照收。<br>
+        四张表里四条「保证金」，页码不同、口径不同，<b>没有一处说明它们同源</b>。
+      </div>
+      <div class="d" style="margin-top:8px; border-top:1px dashed var(--line); padding-top:8px">
+        假如 p8 那张两列表格切块切歪了（「01 包」和「8000 元」被切成两行没对齐），表里就是个空值。<br>
+        <b>你只知道「图里有个空」，不知道是解析错了、检索没召回到 p8、还是模型没抽出来。</b>
+      </div>
+    </div>
+    <div class="card">
+      <div class="t">升级后：一条数据走四段</div>
+      <div class="d" style="margin-top:6px">
+        <b>01 解析</b>：p8 那段落成条目 <span class="mono">{page:8, bbox, text:"01 包：8000 元"}</span>，表格和表头存在一起。<br>
+        <b>02 抽取</b>：全文只检索这一次，五处按类型归位（金额 / 程序 / 资格 / 围串标 / 格式空位），并判掉 p83 那条「履约保证金」。<br>
+        <b>03 比对</b>：拿 company.yaml 的「能否交保证金」对，结论「满足」；p83 那条归到合同要点，不进废标表。<br>
+        <b>04 校验</b>：逐行回查——这一行的页码 + bbox 里，原文真写着「8000 元」吗？
+      </div>
+      <div class="d" style="margin-top:8px; border-top:1px dashed var(--line); padding-top:8px">
+        校验会把 p17 那条退回去：它的原文只说「按规定金额交纳」，<b>没写金额</b>，拿它当金额行证据不足。<br>
+        <b>错误被钉在「抽取段这一条」上，不是「表里有个空」。</b>
+      </div>
+    </div>
+  </div>
+
+  <p class="counter">所以四段拆开换来的不是「更准」，是<b>错了能说是哪一步错的</b>；再配上规则库和重跑，同类错才不再犯第二次。</p>
+
+  <h2>两者的差别</h2>
+  <table>
+    <tr><th></th><th>现在</th><th>升级后</th></tr>
+    <tr class="hi"><td>切分轴</td><td>按问题：废标 / 评分 / 材料 / 空位</td><td>按阶段：解析 / 抽取 / 比对 / 校验</td></tr>
+    <tr class="hi"><td>节点之间</td><td>共享 State，各取原文</td><td>显式 JSON 契约，只拿上一段产物</td></tr>
+    <tr><td>原文读几遍</td><td>4 遍</td><td>1 遍</td></tr>
+    <tr><td>检索次数</td><td>4 次，每个节点自己搜</td><td>1 次，收敛在抽取</td></tr>
+    <tr><td>节点依赖</td><td>平级，可任删</td><td>串行，后段信任前段格式</td></tr>
+    <tr><td>校验</td><td>无</td><td>独立一段，只看证据</td></tr>
+    <tr><td>主循环</td><td>直线</td><td>直线 + 进化回边</td></tr>
+    <tr><td>外部接口</td><td colspan="2">不变：输入 PDF + company.yaml，输出六张表 + 提问框</td></tr>
+  </table>
+
+  <p class="foot">原来那四个节点不会消失：它们沉到「比对」段里面，变成差异清单的四个分类。所以不是推翻重写，是把四根并排的管子接成一根，中间加一道复核。</p>
+</div>
