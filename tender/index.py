@@ -1,7 +1,10 @@
 """
 按章节类型分库：BM25 + FAISS。检索必须带类型，不能搜整份。
+建完后把各章 FAISS 写到 data/tender_index/<pdf文件名>/。
 """
 
+import json
+import shutil
 from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
@@ -96,6 +99,33 @@ class SectionIndex:
                 metadatas=metadatas,
             )
 
+    @classmethod
+    def load(cls, folder: Path) -> "SectionIndex":
+        """从已保存的 FAISS 恢复这一章。BM25 用库里的原文重建，不再重新向量化。"""
+        vs = FAISS.load_local(
+            str(folder),
+            get_embeddings(),
+            allow_dangerous_deserialization=True,
+        )
+        chunks = []
+        for idx in sorted(vs.index_to_docstore_id):
+            doc = vs.docstore.search(vs.index_to_docstore_id[idx])
+            raw = str(doc.metadata.get("bbox") or "")
+            bbox = [float(x) for x in raw.split(",") if x]
+            chunks.append({
+                "text": doc.page_content,
+                "page": doc.metadata.get("page"),
+                "source": doc.metadata.get("source"),
+                "section_type": doc.metadata.get("section_type"),
+                "section_title": doc.metadata.get("section_title"),
+                "bbox": bbox,
+            })
+        self = cls.__new__(cls)
+        self.chunks = chunks
+        self.vs = vs
+        self.bm25 = BM25Okapi([_tokenize(c["text"]) for c in chunks]) if chunks else None
+        return self
+
     def search(self, query: str, k: int = 4) -> list[dict]:
         """先 BM25 再向量，合并去重。"""
         if not self.chunks:
@@ -152,8 +182,47 @@ class TenderIndex:
         return hits
 
 
+def save_tender_index(index: TenderIndex) -> Path:
+    """把各章向量库写到 data/tender_index/<pdf文件名>/<章类型>/。同一份 PDF 再跑会覆盖该目录。"""
+    root = DEFAULT_INDEX_ROOT / Path(index.pdf_path).stem
+    if root.exists():
+        shutil.rmtree(root)
+    root.mkdir(parents=True)
+    saved = []
+    for typ, store in index.stores.items():
+        if store.vs is None:
+            continue
+        folder = root / typ
+        folder.mkdir(parents=True, exist_ok=True)
+        store.vs.save_local(str(folder))
+        saved.append(typ)
+    manifest = {
+        "pdf_path": index.pdf_path,
+        "sections": index.sections,
+        "types": saved,
+    }
+    (root / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return root
+
+
+def load_tender_index(pdf_path) -> TenderIndex:
+    """按 PDF 文件名载入 data/tender_index/<文件名>/。没有这份库就报错。"""
+    root = DEFAULT_INDEX_ROOT / Path(pdf_path).stem
+    manifest_path = root / "manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"没有已保存的向量库: {root}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    stores = {}
+    for typ in manifest.get("types") or []:
+        stores[typ] = SectionIndex.load(root / typ)
+    return TenderIndex(stores, manifest.get("sections") or [], str(pdf_path))
+
+
 def build_tender_index(pages: list[dict], sections: list[dict], pdf_path: str, on_chapter=None) -> TenderIndex:
-    """切块并按类型建库。"""
+    """切块并按类型建库，并把向量库写到 data/tender_index。"""
     chunks = chunk_pages(pages, sections)
     grouped = {}
     for c in chunks:
@@ -166,5 +235,7 @@ def build_tender_index(pages: list[dict], sections: list[dict], pdf_path: str, o
         if on_chapter is not None:
             on_chapter(label, len(items))
         stores[typ] = SectionIndex(items)
-    print("索引建完", flush=True)
-    return TenderIndex(stores, sections, str(pdf_path))
+    index = TenderIndex(stores, sections, str(pdf_path))
+    folder = save_tender_index(index)
+    print(f"索引建完，已写入 {folder}", flush=True)
+    return index

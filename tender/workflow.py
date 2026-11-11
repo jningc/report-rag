@@ -12,9 +12,9 @@ from typing import TypedDict
 import yaml
 from langgraph.graph import END, START, StateGraph
 
-from tender.index import TenderIndex, build_tender_index
+from tender.index import TenderIndex, build_tender_index, load_tender_index
 from tender.llm import get_llm
-from tender.parse import parse_pdf
+from tender.parse import page_count, parse_pdf
 from tender.sections import TYPE_LABEL, required_types_present, split_sections
 from tender.tables import (
     CailiaoTable,
@@ -349,6 +349,58 @@ def _run_check(pdf_path, company_path) -> dict:
         "hetong": out.get("hetong") or [],
         "index": index,
         "pages": pages,
+        "page_count": len(pages),
+    }
+
+
+def run_check_saved(pdf_path, company_path, on_progress=None) -> dict:
+    """载入已有向量库，只跑四步出表。不重新解析、不重新向量化。"""
+    token = _progress_cb.set(on_progress) if on_progress is not None else None
+    try:
+        return _run_check_saved(pdf_path, company_path)
+    finally:
+        if token is not None:
+            _progress_cb.reset(token)
+
+
+def _run_check_saved(pdf_path, company_path) -> dict:
+    """用 data/tender_index 里这份 PDF 的库，接上原来的四步。"""
+    print(f"载入已有向量库 {pdf_path}", flush=True)
+    index = load_tender_index(pdf_path)
+    sections = index.sections
+    n_pages = page_count(pdf_path)
+    _emit("parse", "done", f"{n_pages} 页", page_count=n_pages)
+    _emit("sections", "done", f"{len(sections)} 章", sections=sections)
+    company = load_company(company_path)
+    _emit(
+        "index",
+        "done",
+        "已载入已有向量库",
+        index=index,
+        company=company,
+        pdf_path=str(Path(pdf_path).resolve()),
+    )
+    print("调用模型出表", flush=True)
+    graph = build_graph()
+    out = graph.invoke({
+        "pdf_path": str(pdf_path),
+        "company": company,
+        "index": index,
+    })
+    return {
+        "pdf_path": str(Path(pdf_path).resolve()),
+        "company": company,
+        "sections": sections,
+        "missing": out.get("missing") or [],
+        "feibiao": out.get("feibiao") or [],
+        "pingfen": out.get("pingfen") or [],
+        "cailiao": out.get("cailiao") or [],
+        "kongwei": out.get("kongwei") or [],
+        "shijian": out.get("shijian") or [],
+        "hetong": out.get("hetong") or [],
+        "index": index,
+        "pages": [],
+        "page_count": n_pages,
     }
 
 

@@ -430,7 +430,8 @@
   <button id="btn-pick" type="button">选择 PDF</button>
   <input id="pdf-file" type="file" accept="application/pdf,.pdf" hidden>
   <button id="btn-sample" type="button">用东城道路样本</button>
-  <button id="btn-run" class="primary" type="button">开始核对</button>
+  <button id="btn-library" type="button">用已有库继续</button>
+  <button id="btn-run" class="primary" type="button">从头开始</button>
   <button id="btn-export" type="button" disabled>导出 Excel</button>
 </header>
 
@@ -956,6 +957,7 @@ function showError(message) {
 
 function setBusy(running) {
   document.getElementById("btn-run").disabled = running;
+  document.getElementById("btn-library").disabled = running;
   document.getElementById("btn-sample").disabled = running;
 }
 
@@ -996,15 +998,16 @@ async function poll() {
   if (job.status === "running") pollTimer = setTimeout(poll, 1200);
 }
 
-async function begin(sample) {
+async function begin(sample, mode) {
   showError("");
   const company = document.getElementById("company-yaml").value;
+  mode = mode || "full";
   let response;
   if (sample) {
     response = await fetch("/api/check/sample", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ company: company })
+      body: JSON.stringify({ company: company, mode: mode })
     });
   } else {
     const file = document.getElementById("pdf-file").files[0];
@@ -1015,6 +1018,7 @@ async function begin(sample) {
     const form = new FormData();
     form.append("pdf", file);
     form.append("company", company);
+    form.append("mode", mode);
     response = await fetch("/api/check", { method: "POST", body: form });
   }
   const body = await response.json();
@@ -1112,8 +1116,15 @@ document.getElementById("pdf-file").onchange = function () {
   const file = document.getElementById("pdf-file").files[0];
   if (file) document.getElementById("file-name").textContent = file.name;
 };
-document.getElementById("btn-sample").onclick = function () { begin(true); };
-document.getElementById("btn-run").onclick = function () { begin(false); };
+document.getElementById("btn-sample").onclick = function () { begin(true, "full"); };
+document.getElementById("btn-library").onclick = function () {
+  const file = document.getElementById("pdf-file").files[0];
+  begin(!file, "library");
+};
+document.getElementById("btn-run").onclick = function () {
+  const file = document.getElementById("pdf-file").files[0];
+  begin(!file, "full");
+};
 document.getElementById("btn-export").onclick = function () {
   if (jobId) window.location = "/api/jobs/" + jobId + "/export.xlsx";
 };

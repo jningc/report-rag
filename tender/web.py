@@ -26,7 +26,7 @@ from starlette.staticfiles import StaticFiles
 from tender.ask_box import ask_question
 from tender.parse import render_page_png
 from tender.tools import set_context
-from tender.workflow import run_check
+from tender.workflow import run_check, run_check_saved
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE_PDF = ROOT / "sample" / "beijing_road.pdf"
@@ -138,9 +138,10 @@ def _apply(job_id: str, event: dict) -> None:
             job["pdf_path"] = event["pdf_path"]
 
 
-def _worker(job_id: str, pdf_path: str, company_path: str) -> None:
+def _worker(job_id: str, pdf_path: str, company_path: str, use_index: bool = False) -> None:
+    run = run_check_saved if use_index else run_check
     try:
-        result = run_check(pdf_path, company_path, on_progress=lambda event: _apply(job_id, event))
+        result = run(pdf_path, company_path, on_progress=lambda event: _apply(job_id, event))
     except Exception as exc:
         with _lock:
             job = _jobs[job_id]
@@ -159,12 +160,12 @@ def _worker(job_id: str, pdf_path: str, company_path: str) -> None:
         job["pdf_path"] = result["pdf_path"]
         job["sections"] = result["sections"]
         job["missing"] = result["missing"]
-        job["page_count"] = len(result["pages"])
+        job["page_count"] = result.get("page_count") or len(result["pages"])
         for key in TABLE_KEYS:
             job["tables"][key] = result[key]
 
 
-def _launch(job_id: str, file_name: str, company: dict, pdf_path: Path, company_path: Path) -> None:
+def _launch(job_id: str, file_name: str, company: dict, pdf_path: Path, company_path: Path, use_index: bool = False) -> None:
     job = {
         "id": job_id,
         "status": "running",
@@ -184,7 +185,7 @@ def _launch(job_id: str, file_name: str, company: dict, pdf_path: Path, company_
         _jobs[job_id] = job
     threading.Thread(
         target=_worker,
-        args=(job_id, str(pdf_path), str(company_path)),
+        args=(job_id, str(pdf_path), str(company_path), use_index),
         daemon=True,
     ).start()
 
@@ -219,15 +220,17 @@ async def start_upload(request: Request):
     job_id = uuid.uuid4().hex[:12]
     folder = UPLOAD_ROOT / job_id
     folder.mkdir(parents=True, exist_ok=True)
-    pdf_path = folder / "source.pdf"
+    pdf_path = folder / Path(upload.filename).name
     pdf_path.write_bytes(raw)
     (folder / "company.yaml").write_text(company_text, encoding="utf-8")
+    use_index = str(form.get("mode") or "") == "library"
     _launch(
         job_id,
         Path(upload.filename).name,
         company,
         pdf_path,
         folder / "company.yaml",
+        use_index,
     )
     return Json({"job_id": job_id})
 
@@ -249,7 +252,8 @@ async def start_sample(request: Request):
     folder.mkdir(parents=True, exist_ok=True)
     company_path = folder / "company.yaml"
     company_path.write_text(company_text, encoding="utf-8")
-    _launch(job_id, SAMPLE_PDF.name, company, SAMPLE_PDF, company_path)
+    use_index = (body.get("mode") if isinstance(body, dict) else "") == "library"
+    _launch(job_id, SAMPLE_PDF.name, company, SAMPLE_PDF, company_path, use_index)
     return Json({"job_id": job_id})
 
 
