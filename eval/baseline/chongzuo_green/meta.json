@@ -1,0 +1,21 @@
+{
+  "doc": "chongzuo_green",
+  "pdf": "sample/chongzuo_green.pdf",
+  "started": "2026-11-10T18:49:34",
+  "duration_s": 68.6,
+  "pages": 105,
+  "sections": 6,
+  "missing_sections": [
+    "资格审查"
+  ],
+  "rows": {
+    "feibiao": 15,
+    "pingfen": 4,
+    "cailiao": 18,
+    "kongwei": 58,
+    "shijian": 11,
+    "hetong": 7
+  },
+  "git_commit": "1189c80",
+  "git_dirty": true
+}

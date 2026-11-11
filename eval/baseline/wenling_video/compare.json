@@ -1,0 +1,195 @@
+{
+  "doc": "wenling_video",
+  "output": "eval/baseline/wenling_video/tables.json",
+  "rows": 108,
+  "rows_without_page": 0,
+  "counts": {
+    "total": 6,
+    "positive": 5,
+    "negative": 1,
+    "hit": 5,
+    "miss": 0,
+    "absent": 1,
+    "violated": 0,
+    "verdict_checked": 0,
+    "pos_hit": 4,
+    "neg_hit": 1
+  },
+  "markers": {
+    "markers_total": 10,
+    "markers_by_char": {
+      "★": 0,
+      "▲": 10
+    },
+    "marker_pages": [
+      10,
+      11,
+      16,
+      30,
+      33
+    ],
+    "star_rows": 5,
+    "covered_pages": [
+      16
+    ],
+    "missed_pages": [
+      10,
+      11,
+      30,
+      33
+    ],
+    "note": "▲ 在 p11 的资格证明文件目录里标「实质性格式」（投标声明书、授权委托书、营业执照等）"
+  },
+  "detail": [
+    {
+      "id": "wl-bond",
+      "doc": "wenling_video",
+      "kind": "positive",
+      "status": "absent",
+      "reason": "",
+      "tables": [],
+      "expect_tables": [
+        "废标对照",
+        "材料对照"
+      ],
+      "pages": [],
+      "expect_pages": [
+        5
+      ],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "本项目不收取投标保证金，只在招标公告「其他补充事宜」里写了一处"
+    },
+    {
+      "id": "wl-cap",
+      "doc": "wenling_video",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        3,
+        16
+      ],
+      "expect_pages": [
+        3,
+        16,
+        22,
+        59
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "满足"
+      ],
+      "expect_verdict": null,
+      "note": "预算总额 7951928 元，最高限价留空；报价超预算或最高限价即无效"
+    },
+    {
+      "id": "wl-validity",
+      "doc": "wenling_video",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照",
+        "时间节点"
+      ],
+      "expect_tables": [
+        "废标对照",
+        "时间节点"
+      ],
+      "pages": [
+        8,
+        13
+      ],
+      "expect_pages": [
+        8,
+        13
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "人工看"
+      ],
+      "expect_verdict": null,
+      "note": "投标有效期自投标截止日起 90 天；有效期不足的投标文件将被拒绝"
+    },
+    {
+      "id": "wl-price",
+      "doc": "wenling_video",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "评分对照"
+      ],
+      "expect_tables": [
+        "评分对照"
+      ],
+      "pages": [
+        18
+      ],
+      "expect_pages": [
+        18
+      ],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "价格分公式（评标基准价／投标报价）×50%×100"
+    },
+    {
+      "id": "wl-perf-bond",
+      "doc": "wenling_video",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "合同要点"
+      ],
+      "expect_tables": [
+        "合同要点"
+      ],
+      "pages": [
+        37,
+        38,
+        39
+      ],
+      "expect_pages": [
+        8,
+        34,
+        37
+      ],
+      "extra_pages": [
+        38,
+        39
+      ],
+      "verdicts": [
+        "人工看"
+      ],
+      "expect_verdict": null,
+      "note": "本项目不收取履约保证金；前附表 24 与采购需求「特别说明」各一处"
+    },
+    {
+      "id": "wl-neg-perf-bond",
+      "doc": "wenling_video",
+      "kind": "negative",
+      "status": "hit",
+      "reason": "",
+      "tables": [],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [],
+      "expect_pages": [],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "不收取履约保证金属于合同条款，不该进废标表"
+    }
+  ]
+}

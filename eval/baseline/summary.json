@@ -1,0 +1,195 @@
+{
+  "frozen_at": "2026-11-10",
+  "engine": "v1",
+  "note": "v1 基线：三份样本各跑一次 check，六表原样存档；compare 分数只对有题的文档有意义",
+  "docs": [
+    {
+      "doc": "beijing_road",
+      "pdf": "sample/beijing_road.pdf",
+      "started": "2026-11-10T18:48:14",
+      "duration_s": 67.7,
+      "pages": 92,
+      "sections": 7,
+      "missing_sections": [],
+      "rows": {
+        "feibiao": 14,
+        "pingfen": 9,
+        "cailiao": 11,
+        "kongwei": 37,
+        "shijian": 9,
+        "hetong": 12
+      },
+      "git_commit": "1189c80",
+      "git_dirty": true,
+      "eval": {
+        "questions": 9,
+        "positive": 8,
+        "negative": 1,
+        "pos_hit": 7,
+        "miss": 1,
+        "absent": 0,
+        "neg_hit": 1,
+        "violated": 0,
+        "verdict_checked": 4,
+        "positive_rate": 0.875,
+        "rows": 92,
+        "rows_without_page": 0,
+        "markers": {
+          "markers_total": 2,
+          "markers_by_char": {
+            "★": 2,
+            "▲": 0
+          },
+          "marker_pages": [
+            26
+          ],
+          "star_rows": 0,
+          "covered_pages": [],
+          "missed_pages": [
+            26
+          ],
+          "note": "p26 的两处 ★ 是「★号条款响应」这个符合性审查项（7 ★ / ★号条款响应），不是被标记的条款本身；这是「按字符判 ★ 必错」的样本"
+        }
+      }
+    },
+    {
+      "doc": "chongzuo_green",
+      "pdf": "sample/chongzuo_green.pdf",
+      "started": "2026-11-10T18:49:34",
+      "duration_s": 68.6,
+      "pages": 105,
+      "sections": 6,
+      "missing_sections": [
+        "资格审查"
+      ],
+      "rows": {
+        "feibiao": 15,
+        "pingfen": 4,
+        "cailiao": 18,
+        "kongwei": 58,
+        "shijian": 11,
+        "hetong": 7
+      },
+      "git_commit": "1189c80",
+      "git_dirty": true,
+      "eval": {
+        "questions": 6,
+        "positive": 5,
+        "negative": 1,
+        "pos_hit": 4,
+        "miss": 0,
+        "absent": 1,
+        "neg_hit": 0,
+        "violated": 1,
+        "verdict_checked": 1,
+        "positive_rate": 0.8,
+        "rows": 113,
+        "rows_without_page": 0,
+        "markers": {
+          "markers_total": 30,
+          "markers_by_char": {
+            "★": 22,
+            "▲": 8
+          },
+          "marker_pages": [
+            9,
+            16,
+            19,
+            20,
+            21,
+            28,
+            32,
+            44,
+            82,
+            85
+          ],
+          "star_rows": 1,
+          "covered_pages": [
+            32
+          ],
+          "missed_pages": [
+            9,
+            16,
+            19,
+            20,
+            21,
+            28,
+            44,
+            82,
+            85
+          ],
+          "note": "★ 集中在 p19-21 的设备清单（★ 标型号），▲ 分散在须知与格式章；p9 是前附表"
+        }
+      }
+    },
+    {
+      "doc": "wenling_video",
+      "pdf": "sample/wenling_video.pdf",
+      "started": "2026-11-10T18:50:43",
+      "duration_s": 66.0,
+      "pages": 64,
+      "sections": 6,
+      "missing_sections": [
+        "资格审查"
+      ],
+      "rows": {
+        "feibiao": 17,
+        "pingfen": 12,
+        "cailiao": 13,
+        "kongwei": 37,
+        "shijian": 15,
+        "hetong": 14
+      },
+      "git_commit": "1189c80",
+      "git_dirty": true,
+      "eval": {
+        "questions": 6,
+        "positive": 5,
+        "negative": 1,
+        "pos_hit": 4,
+        "miss": 0,
+        "absent": 1,
+        "neg_hit": 1,
+        "violated": 0,
+        "verdict_checked": 0,
+        "positive_rate": 0.8,
+        "rows": 108,
+        "rows_without_page": 0,
+        "markers": {
+          "markers_total": 10,
+          "markers_by_char": {
+            "★": 0,
+            "▲": 10
+          },
+          "marker_pages": [
+            10,
+            11,
+            16,
+            30,
+            33
+          ],
+          "star_rows": 5,
+          "covered_pages": [
+            16
+          ],
+          "missed_pages": [
+            10,
+            11,
+            30,
+            33
+          ],
+          "note": "▲ 在 p11 的资格证明文件目录里标「实质性格式」（投标声明书、授权委托书、营业执照等）"
+        }
+      }
+    }
+  ],
+  "question_set": {
+    "file": "eval/questions.json",
+    "total": 21,
+    "positive": 18,
+    "negative": 3,
+    "verdict_assertions": 5,
+    "markers_file": "eval/markers.json",
+    "rewritten_at": "2026-11-10"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "doc": "beijing_road",
+  "pdf": "sample/beijing_road.pdf",
+  "started": "2026-11-10T18:48:14",
+  "duration_s": 67.7,
+  "pages": 92,
+  "sections": 7,
+  "missing_sections": [],
+  "rows": {
+    "feibiao": 14,
+    "pingfen": 9,
+    "cailiao": 11,
+    "kongwei": 37,
+    "shijian": 9,
+    "hetong": 12
+  },
+  "git_commit": "1189c80",
+  "git_dirty": true
+}

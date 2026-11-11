@@ -1,0 +1,38 @@
+[
+  {
+    "type": "invite",
+    "title": "第一章招标公告",
+    "start_page": 3,
+    "end_page": 5
+  },
+  {
+    "type": "notice",
+    "title": "第二章投标人须知前附表",
+    "start_page": 6,
+    "end_page": 17
+  },
+  {
+    "type": "score",
+    "title": "第三章评标办法及评分标准",
+    "start_page": 18,
+    "end_page": 21
+  },
+  {
+    "type": "demand",
+    "title": "第四章公开招标需求",
+    "start_page": 22,
+    "end_page": 35
+  },
+  {
+    "type": "contract",
+    "title": "第五章政府采购合同主要条款指引",
+    "start_page": 36,
+    "end_page": 39
+  },
+  {
+    "type": "format",
+    "title": "第六章投标文件格式附件",
+    "start_page": 40,
+    "end_page": 64
+  }
+]

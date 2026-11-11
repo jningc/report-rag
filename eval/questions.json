@@ -1,62 +1,233 @@
 {
-  "_说明": "回归集种子：每条都是人工对着 PDF 原文核过的（页码=原文所在页）。它不是准确率全集，只锁住这 8 条事实别退化。",
-  "_schema": "keyword 在输出条目里出现；该条目的页码集合只要命中 expect_pages 任一项就算过。",
+  "_说明": "v1 题集（2026-11-10 重写）。旧 8 条全部作废：页码没原文依据、不限定落在哪张表、无法表达负例。每条都对着 PDF 原文核过页码，evidence 是原文摘录，供人工复核。",
+  "_schema": {
+    "id": "唯一标识，前缀 bj/cz/wl 对应三份样本",
+    "doc": "beijing_road / chongzuo_green / wenling_video",
+    "tables": "允许落在哪些表（表名与 render_tables 的标题一致）。落错表算 absent。",
+    "keyword": "条目正文里必须含这个子串才算候选",
+    "kind": "positive=该有条目且页码要对；negative=这些表里不该出现该条目",
+    "expect_pages": "positive 用：候选条目的页码集合与它有交集即算过",
+    "expect_verdict": "可选。给了就要求命中的那条条目 verdict 落在给定值里（字符串或数组）；没有 verdict 字段的表用不上",
+    "note": "这条在验什么（产品语义）",
+    "evidence": "原文摘录 + 页码，人工复核用"
+  },
   "questions": [
     {
       "id": "bj-bond",
       "doc": "beijing_road",
+      "tables": ["废标对照", "材料对照"],
       "keyword": "投标保证金",
-      "expect_pages": [8],
-      "note": "12.1 投标保证金金额：01 包 8000 元（p8）"
+      "kind": "positive",
+      "expect_pages": [8, 17, 25],
+      "expect_verdict": "不满足",
+      "note": "01 包保证金 8000 元，三种形式；company.yaml 里 deposit_ready=false → 判「不满足」才是对的",
+      "evidence": "p8「12.1 投标保证金 投标保证金金额：01 包：8000 元；…可采用下列形式之一：(1) 保函（推荐）(2) 支票 (3) 汇款」；p17「12.1 投标人应按《投标人须知资料表》中规定的金额及要求交纳投标保证金」；p25 资格审查表「4 投标保证金 按照招标文件的要求提交投标保证金 提供证明文件复印件并加盖公章」"
     },
     {
-      "id": "bj-validity",
+      "id": "bj-director",
       "doc": "beijing_road",
-      "keyword": "投标有效期",
-      "expect_pages": [8, 18],
-      "note": "13.1 自提交投标文件截止之日起 90 日历天（p8 / p18）"
+      "tables": ["废标对照"],
+      "keyword": "总监理工程师",
+      "kind": "positive",
+      "expect_pages": [4, 25],
+      "expect_verdict": "不满足",
+      "note": "要求「市政公用工程 + 总监理工程师任命书 + 注册单位一致」，company.yaml 的总监是房屋建筑工程、无任命书 → 必须判「不满足」",
+      "evidence": "p25 资格审查表 3-1（2）「拟派总监理工程师具备注册监理工程师证书，注册专业市政公用工程，具有总监理工程师任命书，且注册单位与投标人单位一致」；company.yaml：director.major=房屋建筑工程，appointment_letter=false"
+    },
+    {
+      "id": "bj-qualification",
+      "doc": "beijing_road",
+      "tables": ["废标对照"],
+      "keyword": "乙级",
+      "kind": "positive",
+      "expect_pages": [4, 25],
+      "expect_verdict": "满足",
+      "note": "要求市政公用工程监理乙级及以上；company.yaml 有「市政公用工程监理乙级，有效期 2028-03-01」→ 必须判「满足」（这条和总监那条方向相反，用来防「一律判不满足」）",
+      "evidence": "p4「投标人应具备建设行政主管部门颁发的市政公用工程专业资质乙级及以上监理资质」；p25 资格审查 3-1（1）同义；company.yaml：qualifications[0]=市政公用工程监理乙级 valid_to 2028-03-01"
+    },
+    {
+      "id": "bj-material-bond",
+      "doc": "beijing_road",
+      "tables": ["材料对照"],
+      "keyword": "投标保证金",
+      "kind": "positive",
+      "expect_pages": [17, 79],
+      "expect_verdict": "不满足",
+      "note": "材料表也要有判定：保证金凭证/交款单据必须提交，deposit_ready=false → 不满足。验的是「材料表 verdict 有没有被模型随手写成人工看」",
+      "evidence": "p79 格式章「4 投标保证金凭证/交款单据电子件」；p17「未按上述要求缴纳投标保证金的，其投标无效」；company.yaml：deposit_ready=false"
     },
     {
       "id": "bj-cap",
       "doc": "beijing_road",
+      "tables": ["废标对照"],
       "keyword": "最高限价",
-      "expect_pages": [3, 8, 26],
-      "note": "01 包最高限价 47.130349 万元（p3）"
+      "kind": "positive",
+      "expect_pages": [3, 8, 26, 43],
+      "note": "01 包最高限价 47.130349 万元；超限价即无效投标。四页都写了，任一处皆可",
+      "evidence": "p3「3.项目预算金额：260.183319 万元、01 包项目最高限价（如有）：47.130349 万元」；p8「每条路的投标报价不能超过该道路的最高限价」；p26 符合性审查「3 投标报价 投标报价未超过…最高限价」；p43「五、最高限价 序号 道路名称 项目总投资 最高限价 1 新中街 1391133.44 35921.51」"
     },
     {
-      "id": "bj-qualify",
+      "id": "bj-validity",
       "doc": "beijing_road",
-      "keyword": "乙级",
-      "expect_pages": [4, 25, 78],
-      "note": "市政公用工程专业资质乙级及以上（p4 / p25 资格审查 3-1）"
+      "tables": ["废标对照", "时间节点", "材料对照"],
+      "keyword": "投标有效期",
+      "kind": "positive",
+      "expect_pages": [8, 18, 26],
+      "note": "投标有效期 90 日历天；有效期不足即无效。资料表 13.1、正文 13.1、符合性审查第 5 项各一处",
+      "evidence": "p8「13.1 投标有效期 自提交投标文件的截止之日起算90 日历天」；p18「13.1 投标文件应在本招标文件《投标人须知资料表》中…」；p26「5 投标有效期 投标文件中承诺的投标有效期满足招标文件中载明的投标有效期的」"
     },
     {
       "id": "bj-decrypt",
       "doc": "beijing_road",
+      "tables": ["时间节点", "废标对照"],
       "keyword": "解密",
+      "kind": "positive",
       "expect_pages": [8],
-      "note": "18.2 解密时间 30 分钟（p8）"
+      "note": "解密时间 30 分钟，只在资料表 18.2 出现；线上开标的时间约束",
+      "evidence": "p8「18.2 解密时间 解密时间：30 分钟」"
     },
     {
-      "id": "bj-bid-committee",
+      "id": "bj-price",
       "doc": "beijing_road",
-      "keyword": "评标委员会",
-      "expect_pages": [19],
-      "note": "20.1 评标委员会组建与职责（p19）"
+      "tables": ["评分对照"],
+      "keyword": "评标基准价",
+      "kind": "positive",
+      "expect_pages": [33],
+      "note": "价格分 30 分，公式（评标基准价/投标报价）×30，只在评标办法出现",
+      "evidence": "p33「投标报价（30 分）满足招标文件要求且投标价格最低的投标报价为评标基准价，其价格分为满分…投标报价得分＝（评标基准价/投标报价）×30」"
     },
     {
-      "id": "bj-performance-bond",
+      "id": "bj-neg-perf-bond",
       "doc": "beijing_road",
+      "tables": ["废标对照"],
       "keyword": "履约保证金",
-      "expect_pages": [83],
-      "note": "只在投标书模板里出现，无具体条款（p83）——考的是「找不到就别编」"
+      "kind": "negative",
+      "expect_pages": [],
+      "note": "履约保证金是中标后的合同约束，不该出现在废标表。全文只在 p83 投标书模板里出现，正确归宿是合同要点",
+      "evidence": "p83「（4）如我方中标，我方将在法律规定的期限内与你方签订合同，按照招标文件要求提交履约保证金」"
+    },
+
+    {
+      "id": "cz-bond",
+      "doc": "chongzuo_green",
+      "tables": ["废标对照", "材料对照"],
+      "keyword": "投标保证金",
+      "kind": "positive",
+      "expect_pages": [6, 25, 32],
+      "expect_verdict": ["无须提供", "满足"],
+      "note": "本项目不收保证金——这是结论，不是缺失。公告、前附表 18、须知 18 三处都这么说；judge 成「不满足」或「人工看」都算错",
+      "evidence": "p6「六、其他补充事宜 1.投标保证金：本项目不收取投标保证金」；p25「18 投标保证金金额 本项目不收取投标保证金。」；p32「18.投标保证金 见“投标人须知前附表”。」"
     },
     {
-      "id": "bj-doc-parts",
-      "doc": "beijing_road",
-      "keyword": "组成",
-      "expect_pages": [19],
-      "note": "17.2 投标文件补充修改作为组成部分（p19）"
+      "id": "cz-cap",
+      "doc": "chongzuo_green",
+      "tables": ["废标对照"],
+      "keyword": "最高限价",
+      "kind": "positive",
+      "expect_pages": [3, 43, 45],
+      "note": "预算与最高限价同为 2263.76 万元；报价超出即无效投标",
+      "evidence": "p3「采购预算：2263.76 万元 最高限价：2263.76 万元」；p43「（3）报价超出招标文件规定最高限价，或者超出采购预算金额（包括分项预算）的」；p45「4.2 经投标人确认修正后的报价若超过采购预算金额或者最高限价，投标人的投标文件作无效投标处理」"
+    },
+    {
+      "id": "cz-price",
+      "doc": "chongzuo_green",
+      "tables": ["评分对照"],
+      "keyword": "评标基准价",
+      "kind": "positive",
+      "expect_pages": [46, 47],
+      "note": "价格分 20 分；评分表在 p46 起（含「基准价，其价格分为满分」），公式「（评标基准价／评标报价）×20」在 p47 续页",
+      "evidence": "p46「价格分（20 分）…基准价，其价格分为满分。」；p47「（6）价格分计算公式：价格分=（评标基准价／评标报价）×20 分」"
+    },
+    {
+      "id": "cz-perf-bond",
+      "doc": "chongzuo_green",
+      "tables": ["合同要点"],
+      "keyword": "履约保证金",
+      "kind": "positive",
+      "expect_pages": [26, 56, 57],
+      "note": "履约保证金为中标金额的 5%：前附表 35 规定金额，合同文本第九条规定形式（见索即付保函）",
+      "evidence": "p26「35 履约保证金金额 履约保证金金额为中标金额的 5 %」；p56「九、履约保证金 1、履约保证金形式 乙方应当在本合同签订后5 个工作日内…保函金额为合同总价款的5%」"
+    },
+    {
+      "id": "cz-format-bid-sheet",
+      "doc": "chongzuo_green",
+      "tables": ["空位对照"],
+      "keyword": "开标一览表",
+      "kind": "positive",
+      "expect_pages": [91],
+      "note": "格式章里的开标一览表空表（要填单价、数量、总价），是空位表该列出来的",
+      "evidence": "p91「开标一览表(单位均为人民币元) 项目名称： 项目编号： 投标人名称： 序号 标的名称 具体服务内容…数量① 单价( 元) ② 单项…」"
+    },
+    {
+      "id": "cz-neg-perf-bond",
+      "doc": "chongzuo_green",
+      "tables": ["废标对照"],
+      "keyword": "履约保证金",
+      "kind": "negative",
+      "expect_pages": [],
+      "note": "前附表 35 写了履约保证金 5%，但它属于中标后合同约束，不该进废标表（在废标表出现即算违规）",
+      "evidence": "p26「35 履约保证金金额 履约保证金金额为中标金额的 5 %（注：履约保证金不超过5%）」；对照 p43 的无效投标情形，无一条以履约保证金为条件"
+    },
+
+    {
+      "id": "wl-bond",
+      "doc": "wenling_video",
+      "tables": ["废标对照", "材料对照"],
+      "keyword": "投标保证金",
+      "kind": "positive",
+      "expect_pages": [5],
+      "note": "本项目不收取投标保证金，只在招标公告「其他补充事宜」里写了一处",
+      "evidence": "p5「（二）投标保证金：本项目不收取投标保证金。」"
+    },
+    {
+      "id": "wl-cap",
+      "doc": "wenling_video",
+      "tables": ["废标对照"],
+      "keyword": "预算",
+      "kind": "positive",
+      "expect_pages": [3, 16, 22, 59],
+      "note": "预算总额 7951928 元，最高限价留空；报价超预算或最高限价即无效",
+      "evidence": "p3「预算总额：7951928 元 最高限价：/」；p16「9. 报价超过招标文件中规定的预算金额或最高限价」；p22 公开招标需求「预算金额 7951928 元」；p59「4. 投标报价不得超过预算金额，否则作无效处理」"
+    },
+    {
+      "id": "wl-validity",
+      "doc": "wenling_video",
+      "tables": ["废标对照", "时间节点"],
+      "keyword": "投标有效期",
+      "kind": "positive",
+      "expect_pages": [8, 13],
+      "note": "投标有效期自投标截止日起 90 天；有效期不足的投标文件将被拒绝",
+      "evidence": "p8「12 投标有效期 自投标截止日起90 天」；p13「1. 自投标截止日起90 天投标文件应保持有效。有效期不足的投标文件将被拒绝。」"
+    },
+    {
+      "id": "wl-price",
+      "doc": "wenling_video",
+      "tables": ["评分对照"],
+      "keyword": "评标基准价",
+      "kind": "positive",
+      "expect_pages": [18],
+      "note": "价格分公式（评标基准价／投标报价）×50%×100",
+      "evidence": "p18「投标报价得分=(评标基准价／投标报价)×50%×100」"
+    },
+    {
+      "id": "wl-perf-bond",
+      "doc": "wenling_video",
+      "tables": ["合同要点"],
+      "keyword": "履约保证金",
+      "kind": "positive",
+      "expect_pages": [8, 34, 37],
+      "note": "本项目不收取履约保证金；前附表 24 与采购需求「特别说明」各一处",
+      "evidence": "p8「24 履约保证金 不收取」；p34「3. 履约保证金：本项目不收取履约保证金。」"
+    },
+    {
+      "id": "wl-neg-perf-bond",
+      "doc": "wenling_video",
+      "tables": ["废标对照"],
+      "keyword": "履约保证金",
+      "kind": "negative",
+      "expect_pages": [],
+      "note": "不收取履约保证金属于合同条款，不该进废标表",
+      "evidence": "p8「24 履约保证金 不收取」；p34「3. 履约保证金：本项目不收取履约保证金。」"
     }
   ]
 }

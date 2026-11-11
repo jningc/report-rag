@@ -1,0 +1,44 @@
+[
+  {
+    "type": "invite",
+    "title": "第一章投标邀请",
+    "start_page": 3,
+    "end_page": 6
+  },
+  {
+    "type": "notice",
+    "title": "第二章投标人须知",
+    "start_page": 7,
+    "end_page": 22
+  },
+  {
+    "type": "qualify",
+    "title": "第三章资格审查",
+    "start_page": 23,
+    "end_page": 25
+  },
+  {
+    "type": "score",
+    "title": "第四章评标程序、评标方法和评标标准",
+    "start_page": 26,
+    "end_page": 35
+  },
+  {
+    "type": "demand",
+    "title": "第五章采购需求",
+    "start_page": 36,
+    "end_page": 43
+  },
+  {
+    "type": "contract",
+    "title": "第六章拟签订的合同文本",
+    "start_page": 44,
+    "end_page": 68
+  },
+  {
+    "type": "format",
+    "title": "第七章投标文件格式",
+    "start_page": 69,
+    "end_page": 92
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "doc": "wenling_video",
+  "pdf": "sample/wenling_video.pdf",
+  "started": "2026-11-10T18:50:43",
+  "duration_s": 66.0,
+  "pages": 64,
+  "sections": 6,
+  "missing_sections": [
+    "资格审查"
+  ],
+  "rows": {
+    "feibiao": 17,
+    "pingfen": 12,
+    "cailiao": 13,
+    "kongwei": 37,
+    "shijian": 15,
+    "hetong": 14
+  },
+  "git_commit": "1189c80",
+  "git_dirty": true
+}
