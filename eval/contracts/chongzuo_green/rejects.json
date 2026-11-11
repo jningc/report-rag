@@ -1,0 +1,474 @@
+[
+  {
+    "row": "chongzuo_green:kongwei:000",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "无串标行为承诺函；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:001",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "无串标行为承诺函；日期（年/月/日）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:002",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；项号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:003",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；招标文件的商务需求"
+  },
+  {
+    "row": "chongzuo_green:kongwei:004",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；投标文件承诺的商务条款"
+  },
+  {
+    "row": "chongzuo_green:kongwei:005",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；偏离说明（正偏离/负偏离/无偏离）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:006",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:007",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "商务条款偏离表；日期（年/月/日）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:008",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；项号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:009",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；招标文件需求—标的名称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:010",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；招标文件需求—服务参数"
+  },
+  {
+    "row": "chongzuo_green:kongwei:011",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；投标文件承诺—服务名称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:012",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；投标文件承诺—所提供服务的内容"
+  },
+  {
+    "row": "chongzuo_green:kongwei:013",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；偏离说明（正偏离/负偏离/无偏离）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:014",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:015",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "服务需求、技术需求偏离表；日期（年/月/日）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:016",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A：本项目的项目经理/技术负责人情况表；姓名"
+  },
+  {
+    "row": "chongzuo_green:kongwei:017",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；页码"
+  },
+  {
+    "row": "chongzuo_green:kongwei:018",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；投标截止时间前三年业绩及承担的主要工作情况，曾担任项目经理的项目应列明细"
+  },
+  {
+    "row": "chongzuo_green:kongwei:019",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；性别"
+  },
+  {
+    "row": "chongzuo_green:kongwei:020",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；年龄"
+  },
+  {
+    "row": "chongzuo_green:kongwei:021",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；职称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:022",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；毕业时间"
+  },
+  {
+    "row": "chongzuo_green:kongwei:023",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；所学专业"
+  },
+  {
+    "row": "chongzuo_green:kongwei:024",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；学历"
+  },
+  {
+    "row": "chongzuo_green:kongwei:025",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；资质证书编号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:026",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；其他资质情况"
+  },
+  {
+    "row": "chongzuo_green:kongwei:027",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表A；联系电话"
+  },
+  {
+    "row": "chongzuo_green:kongwei:028",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B：本项目的项目小组人员情况表（按此格式自制）；序号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:029",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；姓名"
+  },
+  {
+    "row": "chongzuo_green:kongwei:030",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；性别"
+  },
+  {
+    "row": "chongzuo_green:kongwei:031",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；年龄"
+  },
+  {
+    "row": "chongzuo_green:kongwei:032",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；学历（页码）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:033",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；专业（页码）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:034",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；职称（页码）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:035",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；本项目中的职责"
+  },
+  {
+    "row": "chongzuo_green:kongwei:036",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；项目经历"
+  },
+  {
+    "row": "chongzuo_green:kongwei:037",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表B；参与本项目的到位情况"
+  },
+  {
+    "row": "chongzuo_green:kongwei:038",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表—附表C：社保缴纳证明材料；投标截止日前近一个月（2026年6月至投标截止时间止任意一个月）社会保险证明材料"
+  },
+  {
+    "row": "chongzuo_green:kongwei:039",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:040",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "项目实施人员一览表；日期（年/月/日）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:041",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表（单位均为人民币元）；项目名称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:042",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；项目编号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:043",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；投标人名称（联合体投标须列明各方名称并标注牵头人）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:044",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；序号"
+  },
+  {
+    "row": "chongzuo_green:kongwei:045",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；标的名称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:046",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；具体服务内容（含具体服务范围、服务时间、服务标准等）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:047",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；数量①"
+  },
+  {
+    "row": "chongzuo_green:kongwei:048",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；单价（元）②"
+  },
+  {
+    "row": "chongzuo_green:kongwei:049",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；单项合价（元）③＝①×②"
+  },
+  {
+    "row": "chongzuo_green:kongwei:050",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；备注"
+  },
+  {
+    "row": "chongzuo_green:kongwei:051",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；报价合计（包含税费等所有费用）：人民币（￥ ）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:052",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；合同履行期限"
+  },
+  {
+    "row": "chongzuo_green:kongwei:053",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:054",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "开标一览表；日期（年/月/日）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:055",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（如有）；[项目采购-采购人]单位名称"
+  },
+  {
+    "row": "chongzuo_green:kongwei:056",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（如有）；[项目采购-项目名称]"
+  },
+  {
+    "row": "chongzuo_green:kongwei:057",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（如有）；投标人名称（电子签章）"
+  },
+  {
+    "row": "chongzuo_green:kongwei:058",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（如有）；日期（年/月/日）"
+  }
+]

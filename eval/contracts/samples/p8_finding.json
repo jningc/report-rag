@@ -1,0 +1,20 @@
+{
+  "clause_id": "beijing_road:notice:12.1",
+  "table": "废标对照",
+  "verdict": "不满足",
+  "evidence": [
+    {
+      "page": 8,
+      "bbox": [
+        47.0,
+        37.3,
+        548.2,
+        804.3
+      ],
+      "text": "12.1 投标保证金 投标保证金金额：01 包：8000 元",
+      "chapter": "第二章 投标人须知",
+      "clause": "12.1"
+    }
+  ],
+  "note": "company.yaml: deposit_ready=false"
+}

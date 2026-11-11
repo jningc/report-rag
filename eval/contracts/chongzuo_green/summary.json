@@ -1,0 +1,14 @@
+{
+  "doc": "chongzuo_green",
+  "rows": 115,
+  "clauses": 56,
+  "findings": 41,
+  "rejects": 59,
+  "reject_reasons": {
+    "evidence_invalid": 59
+  },
+  "convert_rate": 0.487,
+  "evidence_refs": 74,
+  "clause_level_refs": 39,
+  "clause_level_rate": 0.527
+}

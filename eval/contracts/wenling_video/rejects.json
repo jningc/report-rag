@@ -1,0 +1,306 @@
+[
+  {
+    "row": "wenling_video:kongwei:000",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；采购代理机构名称"
+  },
+  {
+    "row": "wenling_video:kongwei:001",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；投标人名称"
+  },
+  {
+    "row": "wenling_video:kongwei:002",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；经营地址"
+  },
+  {
+    "row": "wenling_video:kongwei:003",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；法定代表人姓名"
+  },
+  {
+    "row": "wenling_video:kongwei:004",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；招标项目名称"
+  },
+  {
+    "row": "wenling_video:kongwei:005",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标声明书（附件1）；项目编号"
+  },
+  {
+    "row": "wenling_video:kongwei:006",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；采购代理机构名称"
+  },
+  {
+    "row": "wenling_video:kongwei:007",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；采购人"
+  },
+  {
+    "row": "wenling_video:kongwei:008",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；项目名称"
+  },
+  {
+    "row": "wenling_video:kongwei:009",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；项目编号"
+  },
+  {
+    "row": "wenling_video:kongwei:010",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；投标人名称（单位公章）"
+  },
+  {
+    "row": "wenling_video:kongwei:011",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "符合资格条件的声明函（附件3）；法定代表人（或营运商负责人）或委托代理人（签字或盖章）"
+  },
+  {
+    "row": "wenling_video:kongwei:012",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（附件6）；参加单位的项目采购活动（单位名称及项目名称）"
+  },
+  {
+    "row": "wenling_video:kongwei:013",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（附件6）；投标人名称（盖公章）"
+  },
+  {
+    "row": "wenling_video:kongwei:014",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "残疾人福利性单位声明函（附件6）；日期"
+  },
+  {
+    "row": "wenling_video:kongwei:015",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；序号"
+  },
+  {
+    "row": "wenling_video:kongwei:016",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；内容"
+  },
+  {
+    "row": "wenling_video:kongwei:017",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；招标文件要求"
+  },
+  {
+    "row": "wenling_video:kongwei:018",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；投标文件响应"
+  },
+  {
+    "row": "wenling_video:kongwei:019",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；偏离情况"
+  },
+  {
+    "row": "wenling_video:kongwei:020",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；说明"
+  },
+  {
+    "row": "wenling_video:kongwei:021",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；投标人名称（单位公章）"
+  },
+  {
+    "row": "wenling_video:kongwei:022",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；法定代表人（或营运商负责人）或委托代理人（签字或盖章）"
+  },
+  {
+    "row": "wenling_video:kongwei:023",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "技术、商务偏离表（附件12）；日期（年/月/日）"
+  },
+  {
+    "row": "wenling_video:kongwei:024",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；序号"
+  },
+  {
+    "row": "wenling_video:kongwei:025",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；项目名称"
+  },
+  {
+    "row": "wenling_video:kongwei:026",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；项目地址"
+  },
+  {
+    "row": "wenling_video:kongwei:027",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；合同总价"
+  },
+  {
+    "row": "wenling_video:kongwei:028",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；实施时间"
+  },
+  {
+    "row": "wenling_video:kongwei:029",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；项目质量"
+  },
+  {
+    "row": "wenling_video:kongwei:030",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；项目单位名称及其联系人电话"
+  },
+  {
+    "row": "wenling_video:kongwei:031",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；投标人名称（单位公章）"
+  },
+  {
+    "row": "wenling_video:kongwei:032",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；法定代表人（或营运商负责人）或委托代理人（签字或盖章）"
+  },
+  {
+    "row": "wenling_video:kongwei:033",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人类似项目实施情况一览表（附件14）；日期（年/月/日）"
+  },
+  {
+    "row": "wenling_video:kongwei:034",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "资格证明文件目录（第41页）；目录所列各项材料（1—6项）"
+  },
+  {
+    "row": "wenling_video:kongwei:035",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "授权委托书（目录第2项）；表格空位"
+  },
+  {
+    "row": "wenling_video:kongwei:036",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "中小企业声明函（附件，第45页提及）；表格空位"
+  },
+  {
+    "row": "wenling_video:kongwei:037",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "分包意向协议（第45页提及）；表格空位"
+  }
+]

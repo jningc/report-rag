@@ -1,0 +1,41 @@
+{
+  "pdf": "sample/beijing_road.pdf",
+  "page_count": 92,
+  "page_numbering": "physical",
+  "sections": [
+    {
+      "type": "invite",
+      "title": "第一章 投标邀请",
+      "start_page": 3,
+      "end_page": 6
+    },
+    {
+      "type": "notice",
+      "title": "第二章 投标人须知",
+      "start_page": 7,
+      "end_page": 22
+    }
+  ],
+  "tables": [
+    {
+      "page": 8,
+      "bbox": [
+        47.0,
+        340.0,
+        548.2,
+        400.0
+      ],
+      "header": [
+        "包号",
+        "投标保证金金额"
+      ],
+      "rows": [
+        [
+          "01 包",
+          "8000 元"
+        ]
+      ],
+      "continued_from": null
+    }
+  ]
+}

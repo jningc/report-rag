@@ -1,0 +1,22 @@
+{
+  "finding_id": "beijing_road:notice:12.1-form",
+  "ok": true,
+  "checks": [
+    {
+      "name": "page_exists",
+      "ok": true,
+      "detail": "第 8 页存在"
+    },
+    {
+      "name": "text_contains",
+      "ok": true,
+      "detail": "bbox 内含「保函（保险）」「支票」「汇款」"
+    },
+    {
+      "name": "value_normalized",
+      "ok": true,
+      "detail": "三种形式与原文一致"
+    }
+  ],
+  "reject_reason": ""
+}

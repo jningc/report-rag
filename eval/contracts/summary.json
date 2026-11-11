@@ -1,0 +1,46 @@
+{
+  "docs": [
+    {
+      "doc": "beijing_road",
+      "rows": 60,
+      "clauses": 47,
+      "findings": 23,
+      "rejects": 13,
+      "reject_reasons": {
+        "evidence_invalid": 13
+      },
+      "convert_rate": 0.783,
+      "evidence_refs": 75,
+      "clause_level_refs": 35,
+      "clause_level_rate": 0.467
+    },
+    {
+      "doc": "chongzuo_green",
+      "rows": 115,
+      "clauses": 56,
+      "findings": 41,
+      "rejects": 59,
+      "reject_reasons": {
+        "evidence_invalid": 59
+      },
+      "convert_rate": 0.487,
+      "evidence_refs": 74,
+      "clause_level_refs": 39,
+      "clause_level_rate": 0.527
+    },
+    {
+      "doc": "wenling_video",
+      "rows": 113,
+      "clauses": 75,
+      "findings": 50,
+      "rejects": 38,
+      "reject_reasons": {
+        "evidence_invalid": 38
+      },
+      "convert_rate": 0.664,
+      "evidence_refs": 99,
+      "clause_level_refs": 57,
+      "clause_level_rate": 0.576
+    }
+  ]
+}

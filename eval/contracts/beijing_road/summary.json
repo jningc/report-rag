@@ -1,0 +1,14 @@
+{
+  "doc": "beijing_road",
+  "rows": 60,
+  "clauses": 47,
+  "findings": 23,
+  "rejects": 13,
+  "reject_reasons": {
+    "evidence_invalid": 13
+  },
+  "convert_rate": 0.783,
+  "evidence_refs": 75,
+  "clause_level_refs": 35,
+  "clause_level_rate": 0.467
+}

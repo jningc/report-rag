@@ -1,0 +1,114 @@
+[
+  {
+    "row": "beijing_road:feibiao:000",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "拟派总监理工程师具备注册监理工程师证书，注册专业市政公用工程，具有总监理工程师任命书，且注册单位与投标人单位一致（资格审查3-1）"
+  },
+  {
+    "row": "beijing_road:feibiao:001",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "投标保证金：01包8000元，须在投标截止时间前按形式要求交纳，未按要求缴纳的投标无效"
+  },
+  {
+    "row": "beijing_road:feibiao:002",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人应具备建设行政主管部门颁发的市政公用工程专业资质乙级及以上监理资质（资格审查3-1）"
+  },
+  {
+    "row": "beijing_road:feibiao:003",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "投标人信用记录：近三年被列入失信被执行人、重大税收违法案件当事人名单、政府采购严重违法失信行为记录名单的，投标无效（由代理机构查询）"
+  },
+  {
+    "row": "beijing_road:feibiao:004",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "单位负责人为同一人或者存在直接控股、管理关系的不同供应商，不得参加同一合同项下投标；为项目提供整体设计、规范编制或项目管理、检测等服务的供应商不得再参加本项目其"
+  },
+  {
+    "row": "beijing_road:feibiao:005",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "投标有效期不得少于招标文件规定期限，否则投标无效"
+  },
+  {
+    "row": "beijing_road:feibiao:006",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "投标报价不得为选择性或可调整报价；每条路投标报价不得超过该道路最高限价"
+  },
+  {
+    "row": "beijing_road:feibiao:007",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "须在规定期限内通过北京市政府采购电子交易平台获取所参与包的招标文件，否则投标无效"
+  },
+  {
+    "row": "beijing_road:feibiao:008",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "资格证明文件须符合《资格审查要求》，任一项不符合则资格审查不合格、投标无效；格式要求为实质性格式"
+  },
+  {
+    "row": "beijing_road:feibiao:009",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "须提供有效营业执照等证明文件（复印件加盖公章或电子证照）及《投标人资格声明书》"
+  },
+  {
+    "row": "beijing_road:feibiao:010",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence",
+      "1 validation error for Evidence"
+    ],
+    "text": "电子投标文件须加密并加盖电子签章，于投标截止时间前在电子交易平台提交"
+  },
+  {
+    "row": "beijing_road:feibiao:011",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "本项目不接受联合体投标"
+  },
+  {
+    "row": "beijing_road:feibiao:012",
+    "reason": "evidence_invalid",
+    "detail": [
+      "1 validation error for Evidence"
+    ],
+    "text": "本项目不专门面向中小企业预留采购份额（中小企业政策不构成废标条件）"
+  }
+]

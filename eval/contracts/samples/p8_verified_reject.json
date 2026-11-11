@@ -1,0 +1,22 @@
+{
+  "finding_id": "beijing_road:notice:12.1",
+  "ok": false,
+  "checks": [
+    {
+      "name": "page_exists",
+      "ok": true,
+      "detail": "第 8 页存在"
+    },
+    {
+      "name": "text_contains",
+      "ok": true,
+      "detail": "该页文本含「8000 元」"
+    },
+    {
+      "name": "cross_ref_section",
+      "ok": true,
+      "detail": "12.1 属投标人须知"
+    }
+  ],
+  "reject_reason": "beijing_road:notice:12.1 的 bbox 高 767pt（整页框），定位不到 12.1 那一行，不能当正式出处"
+}

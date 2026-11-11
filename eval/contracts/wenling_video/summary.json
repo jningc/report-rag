@@ -1,0 +1,14 @@
+{
+  "doc": "wenling_video",
+  "rows": 113,
+  "clauses": 75,
+  "findings": 50,
+  "rejects": 38,
+  "reject_reasons": {
+    "evidence_invalid": 38
+  },
+  "convert_rate": 0.664,
+  "evidence_refs": 99,
+  "clause_level_refs": 57,
+  "clause_level_rate": 0.576
+}
