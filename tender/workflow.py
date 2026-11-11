@@ -7,7 +7,7 @@
 import re
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TypedDict
+from typing import Annotated, TypedDict
 
 import yaml
 from langgraph.graph import END, START, StateGraph
@@ -44,6 +44,11 @@ def _emit(stage: str, state: str, detail: str = "", **payload) -> None:
     cb(event)
 
 
+def _merge_dict(left: dict, right: dict) -> dict:
+    """丢弃/降级记录按表名合并，后面的节点不覆盖前面的。"""
+    return {**(left or {}), **(right or {})}
+
+
 class CheckState(TypedDict, total=False):
     pdf_path: str
     company: dict
@@ -55,6 +60,10 @@ class CheckState(TypedDict, total=False):
     kongwei: list
     shijian: list
     hetong: list
+    #: 整行空被丢掉的行：{表名: [{missing, raw}, ...]}
+    dropped: Annotated[dict, _merge_dict]
+    #: 缺关键字段、降级成人工看的行：{表名: [{missing, raw}, ...]}
+    degraded: Annotated[dict, _merge_dict]
 
 
 def load_company(path) -> dict:
@@ -159,7 +168,12 @@ def node_feibiao(state: CheckState) -> dict:
     rows = [r.model_dump() for r in table.rows]
     print(f"  [废标] {len(rows)} 条", flush=True)
     _emit("feibiao", "done", f"{len(rows)} 条", rows=rows, missing=miss)
-    return {"feibiao": rows, "missing": miss}
+    return {
+        "feibiao": rows,
+        "missing": miss,
+        "dropped": {"feibiao": table.dropped_rows},
+        "degraded": {"feibiao": table.degraded_rows},
+    }
 
 
 def node_pingfen(state: CheckState) -> dict:
@@ -187,7 +201,11 @@ def node_pingfen(state: CheckState) -> dict:
     rows = [r.model_dump() for r in table.rows]
     print(f"  [评分] {len(rows)} 条", flush=True)
     _emit("pingfen", "done", f"{len(rows)} 条", rows=rows)
-    return {"pingfen": rows}
+    return {
+        "pingfen": rows,
+        "dropped": {"pingfen": table.dropped_rows},
+        "degraded": {"pingfen": table.degraded_rows},
+    }
 
 
 def node_cailiao(state: CheckState) -> dict:
@@ -204,7 +222,11 @@ def node_cailiao(state: CheckState) -> dict:
     rows = [r.model_dump() for r in table.rows]
     print(f"  [材料] {len(rows)} 条", flush=True)
     _emit("cailiao", "done", f"{len(rows)} 条", rows=rows)
-    return {"cailiao": rows}
+    return {
+        "cailiao": rows,
+        "dropped": {"cailiao": table.dropped_rows},
+        "degraded": {"cailiao": table.degraded_rows},
+    }
 
 
 def node_kongwei(state: CheckState) -> dict:
@@ -229,7 +251,11 @@ def node_kongwei(state: CheckState) -> dict:
     rows = [r.model_dump() for r in table.rows]
     print(f"  [空位] {len(rows)} 条", flush=True)
     _emit("kongwei", "done", f"{len(rows)} 条", rows=rows)
-    return {"kongwei": rows}
+    return {
+        "kongwei": rows,
+        "dropped": {"kongwei": table.dropped_rows},
+        "degraded": {"kongwei": table.degraded_rows},
+    }
 
 
 def node_aux(state: CheckState) -> dict:
@@ -269,6 +295,14 @@ def node_aux(state: CheckState) -> dict:
     return {
         "shijian": shijian_rows,
         "hetong": hetong_rows,
+        "dropped": {
+            "shijian": shijian.dropped_rows,
+            "hetong": hetong.dropped_rows,
+        },
+        "degraded": {
+            "shijian": shijian.degraded_rows,
+            "hetong": hetong.degraded_rows,
+        },
     }
 
 
@@ -347,6 +381,8 @@ def _run_check(pdf_path, company_path) -> dict:
         "kongwei": out.get("kongwei") or [],
         "shijian": out.get("shijian") or [],
         "hetong": out.get("hetong") or [],
+        "dropped": out.get("dropped") or {},
+        "degraded": out.get("degraded") or {},
         "index": index,
         "pages": pages,
         "page_count": len(pages),
@@ -398,6 +434,8 @@ def _run_check_saved(pdf_path, company_path) -> dict:
         "kongwei": out.get("kongwei") or [],
         "shijian": out.get("shijian") or [],
         "hetong": out.get("hetong") or [],
+        "dropped": out.get("dropped") or {},
+        "degraded": out.get("degraded") or {},
         "index": index,
         "pages": [],
         "page_count": n_pages,
@@ -421,6 +459,9 @@ def render_tables(result: dict) -> str:
             refs = row.get("refs") or []
             pages = ",".join(str(r.get("page")) for r in refs if r.get("page"))
             tail = f"  [{pages}]" if pages else "  [无页码]"
+            note = str(row.get("note") or "").strip()
+            if note:
+                tail += f"  备注:{note}"
             lines.append(f"{i}. " + " | ".join(bits) + tail)
 
     _block("废标对照", result["feibiao"], ["verdict", "condition"])
@@ -429,6 +470,14 @@ def render_tables(result: dict) -> str:
     _block("空位对照", result["kongwei"], ["form", "field"])
     _block("时间节点", result["shijian"], ["name", "when"])
     _block("合同要点", result["hetong"], ["item", "content"])
+
+    dropped = result.get("dropped") or {}
+    degraded = result.get("degraded") or {}
+    for key in dropped:
+        n_drop = len(dropped.get(key) or [])
+        n_deg = len(degraded.get(key) or [])
+        if n_drop or n_deg:
+            lines.append(f"\n[{key}] 丢弃空行 {n_drop} 条，缺字段降级 {n_deg} 条（明细见 tables.json）")
     return "\n".join(lines)
 
 

@@ -107,6 +107,71 @@ def test_with_page_keeps_verdict():
 # ---------- 4. company.yaml ----------
 
 def test_load_sample_company():
-    company = load_company(PROJECT_ROOT / "sample" / "company.yaml")
+    company = load_company(PROJECT_ROOT / "sample" / "beijing_road_company.yaml")
     assert isinstance(company, dict)
     assert company  # 非空
+
+
+# ---------- 5. 模型把可选字段填成 null 不许炸 ----------
+
+def test_null_optional_fields_tolerated():
+    """deepseek 偶尔对 note/company 返回 null；丢掉该键走默认值，不能整份崩。"""
+    from tender.tables import HetongTable
+
+    table = HetongTable.model_validate({"rows": [{
+        "item": "履约保证金",
+        "content": "不收取",
+        "note": None,
+        "verdict": None,
+        "refs": [{"page": 8, "text": "不收取", "bbox": None, "clause": None}],
+    }]})
+    assert table.rows[0].note == ""
+    assert table.rows[0].verdict is None
+    assert table.rows[0].refs[0].bbox == []
+    assert table.rows[0].refs[0].clause == ""
+
+
+def test_blank_row_dropped_with_record():
+    """整行全空（关键字段空、也没出处）→ 丢弃，原始内容和缺什么另存。"""
+    from tender.tables import FeibiaoTable
+
+    t = FeibiaoTable.model_validate({"rows": [
+        {"verdict": "不满足"},
+        {},
+        {"condition": "未提交投标保证金", "verdict": "不满足"},
+    ]})
+    assert len(t.rows) == 1
+    assert t.rows[0].condition == "未提交投标保证金"
+    assert t.dropped == 2
+    assert [d["missing"] for d in t.dropped_rows] == [["condition"], ["condition"]]
+    assert t.dropped_rows[0]["raw"]["verdict"] == "不满足"
+
+
+def test_missing_key_with_evidence_kept_as_manual():
+    """关键字段缺了但还有出处 → 留下，降成人工看，备注写缺什么。"""
+    from tender.tables import FeibiaoTable
+
+    t = FeibiaoTable.model_validate({"rows": [{
+        "verdict": "不满足",
+        "refs": [{"page": 17, "text": "未按上述要求缴纳投标保证金的，其投标无效"}],
+    }]})
+    assert len(t.rows) == 1 and t.dropped == 0
+    assert t.rows[0].verdict == "人工看"
+    assert t.rows[0].note == "缺字段：condition"
+    assert t.degraded == 1
+    assert t.degraded_rows[0]["missing"] == ["condition"]
+
+
+def test_partial_key_missing_kept_and_noted():
+    """空位表只填了表名、格子空着 → 不丢，降级并写清缺哪个字段。"""
+    from tender.tables import KongweiTable
+
+    k = KongweiTable.model_validate({"rows": [
+        {"form": "开标一览表"},
+        {"form": None, "field": None, "note": "见格式章"},
+    ]})
+    assert len(k.rows) == 2 and k.dropped == 0
+    assert k.rows[0].note == "缺字段：field"
+    assert k.rows[1].note == "见格式章；缺字段：form、field"
+    assert k.degraded == 2
+
