@@ -1,6 +1,6 @@
 {
   "doc": "wenling_video",
-  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/wenling_video/tables.json",
+  "output": "eval/baseline/wenling_video/tables.json",
   "rows": 113,
   "rows_without_page": 0,
   "counts": {
@@ -11,7 +11,7 @@
     "miss": 0,
     "absent": 0,
     "violated": 0,
-    "verdict_checked": 0,
+    "verdict_checked": 3,
     "pos_hit": 5,
     "neg_hit": 1
   },
@@ -64,7 +64,10 @@
       "verdicts": [
         "无须提供"
       ],
-      "expect_verdict": null,
+      "expect_verdict": [
+        "满足",
+        "无须提供"
+      ],
       "note": "本项目不收取投标保证金，只在招标公告「其他补充事宜」里写了一处"
     },
     {
@@ -93,7 +96,7 @@
       "verdicts": [
         "满足"
       ],
-      "expect_verdict": null,
+      "expect_verdict": "满足",
       "note": "预算总额 7951928 元，最高限价留空；报价超预算或最高限价即无效"
     },
     {
@@ -122,7 +125,7 @@
       "verdicts": [
         "人工看"
       ],
-      "expect_verdict": null,
+      "expect_verdict": "人工看",
       "note": "投标有效期自投标截止日起 90 天；有效期不足的投标文件将被拒绝"
     },
     {

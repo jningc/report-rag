@@ -1,6 +1,6 @@
 {
   "doc": "chongzuo_green",
-  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/chongzuo_green/tables.json",
+  "output": "eval/baseline/chongzuo_green/tables.json",
   "rows": 115,
   "rows_without_page": 0,
   "counts": {
@@ -11,7 +11,7 @@
     "miss": 0,
     "absent": 2,
     "violated": 1,
-    "verdict_checked": 1,
+    "verdict_checked": 2,
     "pos_hit": 3,
     "neg_hit": 0
   },
@@ -94,7 +94,7 @@
       ],
       "extra_pages": [],
       "verdicts": [],
-      "expect_verdict": null,
+      "expect_verdict": "满足",
       "note": "预算与最高限价同为 2263.76 万元；报价超出即无效投标"
     },
     {

@@ -1,18 +1,18 @@
 {
   "doc": "beijing_road",
-  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/beijing_road/tables.json",
+  "output": "eval/baseline/beijing_road/tables.json",
   "rows": 60,
   "rows_without_page": 0,
   "counts": {
     "total": 9,
     "positive": 8,
     "negative": 1,
-    "hit": 8,
-    "miss": 1,
+    "hit": 7,
+    "miss": 2,
     "absent": 0,
     "violated": 0,
-    "verdict_checked": 4,
-    "pos_hit": 7,
+    "verdict_checked": 7,
+    "pos_hit": 6,
     "neg_hit": 1
   },
   "markers": {
@@ -127,10 +127,12 @@
       "status": "hit",
       "reason": "",
       "tables": [
+        "废标对照",
         "材料对照"
       ],
       "expect_tables": [
-        "材料对照"
+        "材料对照",
+        "废标对照"
       ],
       "pages": [
         8,
@@ -156,8 +158,8 @@
       "id": "bj-cap",
       "doc": "beijing_road",
       "kind": "positive",
-      "status": "hit",
-      "reason": "",
+      "status": "miss",
+      "reason": "verdict",
       "tables": [
         "废标对照"
       ],
@@ -180,7 +182,7 @@
       "verdicts": [
         "人工看"
       ],
-      "expect_verdict": null,
+      "expect_verdict": "满足",
       "note": "01 包最高限价 47.130349 万元；超限价即无效投标。四页都写了，任一处皆可"
     },
     {
@@ -219,7 +221,7 @@
       "verdicts": [
         "人工看"
       ],
-      "expect_verdict": null,
+      "expect_verdict": "人工看",
       "note": "投标有效期 90 日历天；有效期不足即无效。资料表 13.1、正文 13.1、符合性审查第 5 项各一处"
     },
     {
@@ -253,7 +255,7 @@
         19
       ],
       "verdicts": [],
-      "expect_verdict": null,
+      "expect_verdict": "人工看",
       "note": "解密时间 30 分钟，只在资料表 18.2 出现；线上开标的时间约束"
     },
     {

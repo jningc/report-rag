@@ -28,13 +28,13 @@
         "questions": 9,
         "positive": 8,
         "negative": 1,
-        "pos_hit": 7,
-        "miss": 1,
+        "pos_hit": 6,
+        "miss": 2,
         "absent": 0,
         "neg_hit": 1,
         "violated": 0,
-        "verdict_checked": 4,
-        "positive_rate": 0.875,
+        "verdict_checked": 7,
+        "positive_rate": 0.75,
         "rows": 60,
         "rows_without_page": 0,
         "markers": {
@@ -88,7 +88,7 @@
         "absent": 2,
         "neg_hit": 0,
         "violated": 1,
-        "verdict_checked": 1,
+        "verdict_checked": 2,
         "positive_rate": 0.6,
         "rows": 115,
         "rows_without_page": 0,
@@ -162,7 +162,7 @@
         "absent": 0,
         "neg_hit": 1,
         "violated": 0,
-        "verdict_checked": 0,
+        "verdict_checked": 3,
         "positive_rate": 1.0,
         "rows": 113,
         "rows_without_page": 0,
@@ -198,5 +198,14 @@
     "file": "eval/questions.json",
     "total": 21,
     "markers_file": "eval/markers.json"
+  },
+  "eval_scored_at": "2026-11-11T21:35:55",
+  "eval_total": {
+    "positive": 18,
+    "pos_hit": 14,
+    "negative": 3,
+    "neg_hit": 2,
+    "violated": 1,
+    "verdict_checked": 12
   }
 }
