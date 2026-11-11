@@ -1,0 +1,61 @@
+# 虚构公司，配套 sample/chongzuo_green.pdf（崇左龙州八角低产林改造 L3 标段，预算和最高限价 2263.76 万元）。
+# 不对应任何真实企业。画像参照广西一家做营造林、低产林改造的小型林业工程企业。
+# 招标硬条件：林业调查规划设计乙级及以上，并且市政公用工程施工总承包贰级及以上；专门面向中小企业；人员、设备、资金要能施工。不收投标保证金。中标后履约保证金为中标金额的 5%。
+# 评分还看：项目经理、技术负责人为林业或园林高级工程师并缴社保；安全员有培训证；石漠化治理或退化林修复等营造林业绩。
+# 故意缺：没有市政公用工程施工总承包资质。其余人员、设备和营造林业绩按能投标来写。
+name: 示例崇左绿林工程有限公司
+uscc: "91451402MA00EXAMPLE2"
+established: "2017-06-08"
+years: 9
+address: 广西崇左市江州区示例大道 7 号
+legal_representative: 李某
+registered_capital_wan: 3000
+employees: 86
+sme: small
+financial:
+  revenue_last_year_wan: 6400
+  tax_paid: true
+  social_insurance_paid: true
+qualifications:
+  - name: 林业调查规划设计乙级
+    issuer: 国家林业和草原局
+    valid_to: "2027-12-31"
+  - name: 林木种子生产经营许可证
+    valid_to: "2027-05-01"
+director:
+  name: 李某
+  license: 林业高级工程师
+  major: 林业
+  appointment_letter: true
+  same_employer: true
+  social_insurance_month: "2026-07"
+staff:
+  - role: 项目经理
+    name: 李某
+    title: 林业高级工程师
+    social_insurance_month: "2026-07"
+  - role: 技术负责人
+    name: 黄某
+    title: 园林高级工程师
+    social_insurance_month: "2026-07"
+  - role: 安全员
+    name: 农某
+    certificate: 安全员培训证
+    social_insurance_month: "2026-07"
+equipment:
+  - 挖机 2 台
+  - 植树钻 4 台
+  - 运苗车 3 辆
+performance:
+  - name: 某县退化林修复营造林工程
+    year: 2024
+    amount_wan: 860
+    similar: 退化林修复
+  - name: 某乡八角低产林抚育改造
+    year: 2023
+    amount_wan: 420
+    similar: 低产林改造
+deposit_ready: false
+performance_bond_ready: true
+quote_wan: 2100
+joint_venture: false

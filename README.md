@@ -30,7 +30,7 @@ pip install -r requirements.txt
 核对：
 
 ```bash
-python main.py check sample/beijing_road.pdf sample/company.yaml
+python main.py check sample/beijing_road.pdf sample/beijing_road_company.yaml
 ```
 
 提问（只在指定章节里搜）：
@@ -61,7 +61,7 @@ tender/              核对主路径（解析 → 切章 → 按章检索 → �
   tools.py           search_section / follow_reference / read_company / calc_price_score
   ask_box.py         提问框，最多 5 步工具循环
   llm.py             对话模型客户端
-sample/              虚构 company.yaml，样本 PDF 下载说明
+sample/              三份招标 PDF，各配一份同名公司 yaml
 static/              核对页面
   index.html         效果演示页
   vendor/            PDF.js（pdf.min.js、pdf.worker.min.js）

@@ -183,7 +183,7 @@ def main():
 
 
 def Path_read_company() -> str:
-    p = Path("sample/company.yaml")
+    p = Path("sample/beijing_road_company.yaml")
     if p.exists():
         return p.read_text(encoding="utf-8")
     return "name: 示例公司\n"

@@ -1,6 +1,25 @@
-# 样本招标文件下载
+# 样本
 
-浏览器打开即为 PDF，开标已过，只作样本。不要把 PDF 提交进 Git。
+每份招标 PDF 配一份同名的虚构公司文件。公司不对应任何真实企业，都故意缺一两项招标要求的资质。PDF 不进 Git。
+
+| 招标文件 | 公司情况 | 项目 |
+|---|---|---|
+| `beijing_road.pdf` | `beijing_road_company.yaml` | 北京东城道路监理 |
+| `chongzuo_green.pdf` | `chongzuo_green_company.yaml` | 崇左龙州八角低产林改造 |
+| `wenling_video.pdf` | `wenling_video_company.yaml` | 温岭雪亮工程视频共享整合接入 |
+
+核对时 PDF 和公司文件成对使用，例如：
+
+```bash
+python main.py check sample/chongzuo_green.pdf sample/chongzuo_green_company.yaml
+python main.py check sample/wenling_video.pdf sample/wenling_video_company.yaml
+```
+
+网页和 `python main.py check` 不写公司文件时，默认用 `beijing_road_company.yaml`。
+
+## 下载
+
+浏览器打开即为 PDF，开标已过，只作样本。
 
 ```bash
 mkdir -p sample

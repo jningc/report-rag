@@ -5,8 +5,8 @@
   python main.py parse sample/beijing_road.pdf
   python main.py sections sample/beijing_road.pdf
   python main.py index sample/beijing_road.pdf
-  python main.py check sample/beijing_road.pdf sample/company.yaml
-  python main.py ask "投标保证金多少" --pdf sample/beijing_road.pdf --company sample/company.yaml
+  python main.py check sample/beijing_road.pdf sample/beijing_road_company.yaml
+  python main.py ask "投标保证金多少" --pdf sample/beijing_road.pdf --company sample/beijing_road_company.yaml
   python main.py web
 """
 
@@ -14,7 +14,7 @@ import argparse
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DEFAULT_COMPANY = PROJECT_ROOT / "sample" / "company.yaml"
+DEFAULT_COMPANY = PROJECT_ROOT / "sample" / "beijing_road_company.yaml"
 
 
 def _show(brief: str, path) -> None:

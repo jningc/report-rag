@@ -1,0 +1,43 @@
+# 虚构公司，配套 sample/wenling_video.pdf（温岭雪亮工程视频共享整合接入，预算 795.1928 万元，服务期 3 年）。
+# 不对应任何真实企业。画像参照浙江一家做视频接入、专网集成的小型信息技术企业。
+# 招标硬条件：基础电信业务经营许可证或广播电视节目传送经营许可证，二选一；本身是中小企业则可不再分包；不接受联合体。不收投标保证金，也不收履约保证金。
+# 评分还看：项目经理为计算机、通信或电子专业工程师；团队里的信息系统项目管理师或网络工程师；类似视频监控合同；温岭本地网点、人员和车辆。
+# 故意缺：项目经理职称是土木工程，没有类似视频监控合同。许可证、本地网点和团队证书按能投标来写。
+name: 示例温岭视联技术有限公司
+uscc: "91331081MA00EXAMPLE3"
+established: "2020-03-12"
+years: 6
+address: 浙江省温岭市太平街道示例路 26 号
+legal_representative: 王某
+registered_capital_wan: 1000
+employees: 37
+sme: small
+financial:
+  revenue_last_year_wan: 2200
+  tax_paid: true
+  social_insurance_paid: true
+  accounting_system: true
+qualifications:
+  - name: 广播电视节目传送经营许可证
+    issuer: 浙江省广播电视局
+    valid_to: "2028-06-30"
+project_manager:
+  name: 王某
+  title: 土木工程工程师
+  social_insurance: true
+staff:
+  - name: 赵某
+    certificate: 网络工程师
+  - name: 陈某
+    certificate: 信息系统项目管理师
+local_service:
+  city: 温岭
+  sites: 1
+  people: 8
+  vehicles: 2
+performance: []
+deposit_ready: false
+performance_bond_ready: false
+quote_wan: 720
+joint_venture: false
+zhejiang_gov_supplier: true
