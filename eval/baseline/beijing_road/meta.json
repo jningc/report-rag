@@ -1,19 +1,23 @@
 {
   "doc": "beijing_road",
   "pdf": "sample/beijing_road.pdf",
-  "started": "2026-11-10T18:48:14",
-  "duration_s": 67.7,
+  "company": "sample/beijing_road_company.yaml",
+  "company_sha256": "6a9ae51682c9",
+  "page_numbering": "physical",
+  "engine_mode": "cached-index",
+  "started": "2026-11-11T20:36:08",
+  "duration_s": 56.3,
   "pages": 92,
   "sections": 7,
   "missing_sections": [],
   "rows": {
-    "feibiao": 14,
+    "feibiao": 13,
     "pingfen": 9,
     "cailiao": 11,
-    "kongwei": 37,
-    "shijian": 9,
+    "kongwei": 5,
+    "shijian": 10,
     "hetong": 12
   },
-  "git_commit": "1189c80",
+  "git_commit": "668f9a8",
   "git_dirty": true
 }

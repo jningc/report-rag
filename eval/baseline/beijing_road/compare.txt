@@ -1,21 +1,21 @@
 [beijing_road] 题集 9 条（正例 8 / 负例 1） | 命中 8 | 页码错 1 | 未抽到 0 | 负例违规 0
 正例通过率 7/8（88%） · 负例通过 1/1
-输出条目 92 行，其中无页码 0 行
+输出条目 60 行，其中无页码 0 行
 其中断言判定值（verdict）的 4 条
 ★/▲ 对账：原文 2 个（★2，页 [26]）→ 废标表 star=True 0 行，引到标记页 0/1
   未覆盖标记页：[26]
-多引页码 4 条（不算错，排查用）：bj-bond、bj-material-bond、bj-validity、bj-decrypt
-  ✓ bj-bond                期望 p[8, 17, 25]             实际 p[8, 17, 79]                 表 废标对照/材料对照
-       判定 期望「不满足」实际「不满足/人工看」
+多引页码 5 条（不算错，排查用）：bj-bond、bj-material-bond、bj-cap、bj-validity、bj-decrypt
+  ✓ bj-bond                期望 p[8, 17, 25]             实际 p[8, 17, 25, 79]             表 废标对照/材料对照
+       判定 期望「不满足」实际「不满足」
   ✓ bj-director            期望 p[4, 25]                 实际 p[4, 25]                     表 废标对照
        判定 期望「不满足」实际「不满足」
   ✓ bj-qualification       期望 p[4, 25]                 实际 p[4, 25]                     表 废标对照
        判定 期望「满足」实际「满足」
-  ✓ bj-material-bond       期望 p[17, 79]                实际 p[8, 17, 79]                 表 材料对照
-       判定 期望「不满足」实际「不满足/人工看」
-  ✓ bj-cap                 期望 p[3, 8, 26, 43]          实际 p[3, 8]                      表 废标对照
+  ✓ bj-material-bond       期望 p[17, 79]                实际 p[8, 17, 25, 79]             表 材料对照
+       判定 期望「不满足」实际「不满足」
+  ✓ bj-cap                 期望 p[3, 8, 26, 43]          实际 p[8, 17]                     表 废标对照
   ✓ bj-validity            期望 p[8, 18, 26]             实际 p[3, 4, 6, 17, 18]           表 废标对照/时间节点
   ✗ bj-decrypt             期望 p[8]                     实际 p[4, 6, 10, 16, 19]          表 时间节点
   ✓ bj-price               期望 p[33]                    实际 p[33]                        表 评分对照
   ✓ bj-neg-perf-bond       期望 不应出现                     实际 （无）                          表 —
-JSON 已写入 eval/baseline/beijing_road/compare.json
+JSON 已写入 /Users/ning/Desktop/tender-lint/eval/baseline/beijing_road/compare.json

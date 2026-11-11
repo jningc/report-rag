@@ -1,7 +1,7 @@
 {
   "doc": "beijing_road",
-  "output": "eval/baseline/beijing_road/tables.json",
-  "rows": 92,
+  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/beijing_road/tables.json",
+  "rows": 60,
   "rows_without_page": 0,
   "counts": {
     "total": 9,
@@ -49,6 +49,7 @@
       "pages": [
         8,
         17,
+        25,
         79
       ],
       "expect_pages": [
@@ -60,8 +61,7 @@
         79
       ],
       "verdicts": [
-        "不满足",
-        "人工看"
+        "不满足"
       ],
       "expect_verdict": "不满足",
       "note": "01 包保证金 8000 元，三种形式；company.yaml 里 deposit_ready=false → 判「不满足」才是对的"
@@ -135,6 +135,7 @@
       "pages": [
         8,
         17,
+        25,
         79
       ],
       "expect_pages": [
@@ -142,11 +143,11 @@
         79
       ],
       "extra_pages": [
-        8
+        8,
+        25
       ],
       "verdicts": [
-        "不满足",
-        "人工看"
+        "不满足"
       ],
       "expect_verdict": "不满足",
       "note": "材料表也要有判定：保证金凭证/交款单据必须提交，deposit_ready=false → 不满足。验的是「材料表 verdict 有没有被模型随手写成人工看」"
@@ -164,8 +165,8 @@
         "废标对照"
       ],
       "pages": [
-        3,
-        8
+        8,
+        17
       ],
       "expect_pages": [
         3,
@@ -173,7 +174,9 @@
         26,
         43
       ],
-      "extra_pages": [],
+      "extra_pages": [
+        17
+      ],
       "verdicts": [
         "人工看"
       ],

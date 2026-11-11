@@ -1,18 +1,18 @@
 {
   "doc": "chongzuo_green",
-  "output": "eval/baseline/chongzuo_green/tables.json",
-  "rows": 113,
+  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/chongzuo_green/tables.json",
+  "rows": 115,
   "rows_without_page": 0,
   "counts": {
     "total": 6,
     "positive": 5,
     "negative": 1,
-    "hit": 4,
+    "hit": 3,
     "miss": 0,
-    "absent": 1,
+    "absent": 2,
     "violated": 1,
     "verdict_checked": 1,
-    "pos_hit": 4,
+    "pos_hit": 3,
     "neg_hit": 0
   },
   "markers": {
@@ -55,32 +55,21 @@
       "id": "cz-bond",
       "doc": "chongzuo_green",
       "kind": "positive",
-      "status": "hit",
+      "status": "absent",
       "reason": "",
-      "tables": [
-        "废标对照",
-        "材料对照"
-      ],
+      "tables": [],
       "expect_tables": [
         "废标对照",
         "材料对照"
       ],
-      "pages": [
-        25,
-        76
-      ],
+      "pages": [],
       "expect_pages": [
         6,
         25,
         32
       ],
-      "extra_pages": [
-        76
-      ],
-      "verdicts": [
-        "人工看",
-        "无须提供"
-      ],
+      "extra_pages": [],
+      "verdicts": [],
       "expect_verdict": [
         "无须提供",
         "满足"

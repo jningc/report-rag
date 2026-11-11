@@ -1,25 +1,28 @@
 {
-  "frozen_at": "2026-11-10",
+  "frozen_at": "2026-11-11T20:37:05",
   "engine": "v1",
-  "note": "v1 基线：三份样本各跑一次 check，六表原样存档；compare 分数只对有题的文档有意义",
   "docs": [
     {
       "doc": "beijing_road",
       "pdf": "sample/beijing_road.pdf",
-      "started": "2026-11-10T18:48:14",
-      "duration_s": 67.7,
+      "company": "sample/beijing_road_company.yaml",
+      "company_sha256": "6a9ae51682c9",
+      "page_numbering": "physical",
+      "engine_mode": "cached-index",
+      "started": "2026-11-11T20:36:08",
+      "duration_s": 56.3,
       "pages": 92,
       "sections": 7,
       "missing_sections": [],
       "rows": {
-        "feibiao": 14,
+        "feibiao": 13,
         "pingfen": 9,
         "cailiao": 11,
-        "kongwei": 37,
-        "shijian": 9,
+        "kongwei": 5,
+        "shijian": 10,
         "hetong": 12
       },
-      "git_commit": "1189c80",
+      "git_commit": "668f9a8",
       "git_dirty": true,
       "eval": {
         "questions": 9,
@@ -32,7 +35,7 @@
         "violated": 0,
         "verdict_checked": 4,
         "positive_rate": 0.875,
-        "rows": 92,
+        "rows": 60,
         "rows_without_page": 0,
         "markers": {
           "markers_total": 2,
@@ -55,35 +58,39 @@
     {
       "doc": "chongzuo_green",
       "pdf": "sample/chongzuo_green.pdf",
-      "started": "2026-11-10T18:49:34",
-      "duration_s": 68.6,
+      "company": "sample/chongzuo_green_company.yaml",
+      "company_sha256": "d661da65f3a2",
+      "page_numbering": "physical",
+      "engine_mode": "full-parse",
+      "started": "2026-11-11T19:16:33",
+      "duration_s": 68.2,
       "pages": 105,
       "sections": 6,
       "missing_sections": [
         "资格审查"
       ],
       "rows": {
-        "feibiao": 15,
+        "feibiao": 20,
         "pingfen": 4,
-        "cailiao": 18,
-        "kongwei": 58,
+        "cailiao": 14,
+        "kongwei": 59,
         "shijian": 11,
         "hetong": 7
       },
-      "git_commit": "1189c80",
+      "git_commit": "668f9a8",
       "git_dirty": true,
       "eval": {
         "questions": 6,
         "positive": 5,
         "negative": 1,
-        "pos_hit": 4,
+        "pos_hit": 3,
         "miss": 0,
-        "absent": 1,
+        "absent": 2,
         "neg_hit": 0,
         "violated": 1,
         "verdict_checked": 1,
-        "positive_rate": 0.8,
-        "rows": 113,
+        "positive_rate": 0.6,
+        "rows": 115,
         "rows_without_page": 0,
         "markers": {
           "markers_total": 30,
@@ -125,35 +132,39 @@
     {
       "doc": "wenling_video",
       "pdf": "sample/wenling_video.pdf",
-      "started": "2026-11-10T18:50:43",
-      "duration_s": 66.0,
+      "company": "sample/wenling_video_company.yaml",
+      "company_sha256": "496885d0af51",
+      "page_numbering": "physical",
+      "engine_mode": "full-parse",
+      "started": "2026-11-11T19:17:41",
+      "duration_s": 66.1,
       "pages": 64,
       "sections": 6,
       "missing_sections": [
         "资格审查"
       ],
       "rows": {
-        "feibiao": 17,
+        "feibiao": 22,
         "pingfen": 12,
-        "cailiao": 13,
-        "kongwei": 37,
-        "shijian": 15,
-        "hetong": 14
+        "cailiao": 17,
+        "kongwei": 38,
+        "shijian": 13,
+        "hetong": 11
       },
-      "git_commit": "1189c80",
+      "git_commit": "668f9a8",
       "git_dirty": true,
       "eval": {
         "questions": 6,
         "positive": 5,
         "negative": 1,
-        "pos_hit": 4,
+        "pos_hit": 5,
         "miss": 0,
-        "absent": 1,
+        "absent": 0,
         "neg_hit": 1,
         "violated": 0,
         "verdict_checked": 0,
-        "positive_rate": 0.8,
-        "rows": 108,
+        "positive_rate": 1.0,
+        "rows": 113,
         "rows_without_page": 0,
         "markers": {
           "markers_total": 10,
@@ -168,7 +179,7 @@
             30,
             33
           ],
-          "star_rows": 5,
+          "star_rows": 1,
           "covered_pages": [
             16
           ],
@@ -186,10 +197,6 @@
   "question_set": {
     "file": "eval/questions.json",
     "total": 21,
-    "positive": 18,
-    "negative": 3,
-    "verdict_assertions": 5,
-    "markers_file": "eval/markers.json",
-    "rewritten_at": "2026-11-10"
+    "markers_file": "eval/markers.json"
   }
 }

@@ -1,15 +1,15 @@
-[chongzuo_green] 题集 6 条（正例 5 / 负例 1） | 命中 4 | 页码错 0 | 未抽到 1 | 负例违规 1
-正例通过率 4/5（80%） · 负例通过 0/1
-输出条目 113 行，其中无页码 0 行
+[chongzuo_green] 题集 6 条（正例 5 / 负例 1） | 命中 3 | 页码错 0 | 未抽到 2 | 负例违规 1
+正例通过率 3/5（60%） · 负例通过 0/1
+输出条目 115 行，其中无页码 0 行
 其中断言判定值（verdict）的 1 条
 ★/▲ 对账：原文 30 个（★22、▲8，页 [9, 16, 19, 20, 21, 28, 32, 44, 82, 85]）→ 废标表 star=True 1 行，引到标记页 1/10
   未覆盖标记页：[9, 16, 19, 20, 21, 28, 44, 82, 85]
-多引页码 3 条（不算错，排查用）：cz-bond、cz-perf-bond、cz-neg-perf-bond
-  ✓ cz-bond                期望 p[6, 25, 32]             实际 p[25, 76]                    表 废标对照/材料对照
-       判定 期望「无须提供/满足」实际「人工看/无须提供」
+多引页码 2 条（不算错，排查用）：cz-perf-bond、cz-neg-perf-bond
+  — cz-bond                期望 p[6, 25, 32]             实际 （无）                          表 —
+       判定 期望「无须提供/满足」实际「（无判定字段）」
   — cz-cap                 期望 p[3, 43, 45]             实际 （无）                          表 —
   ✓ cz-price               期望 p[46, 47]                实际 p[46]                        表 评分对照
   ✓ cz-perf-bond           期望 p[26, 56, 57]            实际 p[55, 56, 57, 59]            表 合同要点
   ✓ cz-format-bid-sheet    期望 p[91]                    实际 p[91]                        表 空位对照
   ! cz-neg-perf-bond       期望 不应出现                     实际 p[26]                        表 废标对照
-JSON 已写入 eval/baseline/chongzuo_green/compare.json
+JSON 已写入 /Users/ning/Desktop/tender-lint/eval/baseline/chongzuo_green/compare.json

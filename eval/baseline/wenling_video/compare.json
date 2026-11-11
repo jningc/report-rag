@@ -1,18 +1,18 @@
 {
   "doc": "wenling_video",
-  "output": "eval/baseline/wenling_video/tables.json",
-  "rows": 108,
+  "output": "/Users/ning/Desktop/tender-lint/eval/baseline/wenling_video/tables.json",
+  "rows": 113,
   "rows_without_page": 0,
   "counts": {
     "total": 6,
     "positive": 5,
     "negative": 1,
-    "hit": 5,
+    "hit": 6,
     "miss": 0,
-    "absent": 1,
+    "absent": 0,
     "violated": 0,
     "verdict_checked": 0,
-    "pos_hit": 4,
+    "pos_hit": 5,
     "neg_hit": 1
   },
   "markers": {
@@ -28,7 +28,7 @@
       30,
       33
     ],
-    "star_rows": 5,
+    "star_rows": 1,
     "covered_pages": [
       16
     ],
@@ -45,19 +45,25 @@
       "id": "wl-bond",
       "doc": "wenling_video",
       "kind": "positive",
-      "status": "absent",
+      "status": "hit",
       "reason": "",
-      "tables": [],
+      "tables": [
+        "废标对照"
+      ],
       "expect_tables": [
         "废标对照",
         "材料对照"
       ],
-      "pages": [],
+      "pages": [
+        5
+      ],
       "expect_pages": [
         5
       ],
       "extra_pages": [],
-      "verdicts": [],
+      "verdicts": [
+        "无须提供"
+      ],
       "expect_verdict": null,
       "note": "本项目不收取投标保证金，只在招标公告「其他补充事宜」里写了一处"
     },

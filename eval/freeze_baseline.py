@@ -22,14 +22,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from tender.workflow import render_tables, run_check  # noqa: E402
+from tender.workflow import render_tables, run_check, run_check_saved  # noqa: E402
 
 DOCS = {
-    "beijing_road": ROOT / "sample" / "beijing_road.pdf",
-    "chongzuo_green": ROOT / "sample" / "chongzuo_green.pdf",
-    "wenling_video": ROOT / "sample" / "wenling_video.pdf",
+    # 三份行业不同，各配一家虚构公司；基线必须成对读，不能拿北京的公司去对崇左
+    "beijing_road": {
+        "pdf": ROOT / "sample" / "beijing_road.pdf",
+        "company": ROOT / "sample" / "beijing_road_company.yaml",
+    },
+    "chongzuo_green": {
+        "pdf": ROOT / "sample" / "chongzuo_green.pdf",
+        "company": ROOT / "sample" / "chongzuo_green_company.yaml",
+    },
+    "wenling_video": {
+        "pdf": ROOT / "sample" / "wenling_video.pdf",
+        "company": ROOT / "sample" / "wenling_video_company.yaml",
+    },
 }
-COMPANY = ROOT / "sample" / "company.yaml"
 OUT = ROOT / "eval" / "baseline"
 TABLES = ["feibiao", "pingfen", "cailiao", "kongwei", "shijian", "hetong"]
 
@@ -43,15 +52,24 @@ def _git(*args: str) -> str:
         return ""
 
 
-def freeze(doc: str, pdf: Path) -> dict:
+def _sha(path: Path) -> str:
+    """公司文件指纹：改了公司就像换了题，基线不能混着比。"""
+    import hashlib
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+
+def freeze(doc: str, pdf: Path, company: Path, reuse_index: bool = True) -> dict:
     """跑一次核对，落四份产物，返回 meta。"""
     folder = OUT / doc
     folder.mkdir(parents=True, exist_ok=True)
-    print(f"\n=== {doc}（{pdf.name}）", flush=True)
+    cached = (ROOT / "data" / "tender_index" / pdf.stem / "manifest.json").exists()
+    mode = "cached-index" if (reuse_index and cached) else "full-parse"
+    print(f"\n=== {doc}（{pdf.name} + {company.name}，{mode}）", flush=True)
 
     started = datetime.now().isoformat(timespec="seconds")
     t0 = time.time()
-    result = run_check(str(pdf), str(COMPANY))
+    runner = run_check_saved if mode == "cached-index" else run_check
+    result = runner(str(pdf), str(company))
     duration = round(time.time() - t0, 1)
 
     text = render_tables(result)
@@ -62,6 +80,20 @@ def freeze(doc: str, pdf: Path) -> dict:
                 "doc": doc,
                 "missing": result.get("missing") or [],
                 "tables": {k: result.get(k) or [] for k in TABLES},
+                "dropped": result.get("dropped") or {},
+                "degraded": result.get("degraded") or {},
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (folder / "dropped_rows.json").write_text(
+        json.dumps(
+            {
+                "doc": doc,
+                "dropped": result.get("dropped") or {},
+                "degraded": result.get("degraded") or {},
             },
             ensure_ascii=False,
             indent=2,
@@ -77,9 +109,13 @@ def freeze(doc: str, pdf: Path) -> dict:
     meta = {
         "doc": doc,
         "pdf": str(pdf.relative_to(ROOT)),
+        "company": str(company.relative_to(ROOT)),
+        "company_sha256": _sha(company),
+        "page_numbering": "physical",  # 页码一律 PDF 物理页；页脚印刷页码 beijing/chongzuo 差 2、wenling 一致
+        "engine_mode": mode,
         "started": started,
         "duration_s": duration,
-        "pages": len(result.get("pages") or []),
+        "pages": len(result.get("pages") or []) or result.get("page_count") or 0,
         "sections": len(result.get("sections") or []),
         "missing_sections": result.get("missing") or [],
         "rows": counts,
@@ -97,17 +133,21 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="冻结 v1 基线")
     ap.add_argument("--docs", nargs="*", choices=list(DOCS), help="默认跑全部")
     ap.add_argument("--skip-compare", action="store_true", help="只出表，不打分")
+    ap.add_argument("--rebuild-index", action="store_true",
+                    help="强制重新解析和向量化（默认复用 data/tender_index 里已有索引）")
     args = ap.parse_args()
 
     docs = args.docs or list(DOCS)
-    missing = [d for d in docs if not DOCS[d].exists()]
+    missing = [d for d in docs
+               if not DOCS[d]["pdf"].exists() or not DOCS[d]["company"].exists()]
     if missing:
-        print(f"缺 PDF：{missing}，先按 sample/sources.md 下载", flush=True)
+        print(f"缺 PDF 或公司文件：{missing}，先按 sample/sources.md 下载/补齐", flush=True)
         return 1
 
     metas = []
     for doc in docs:
-        metas.append(freeze(doc, DOCS[doc]))
+        metas.append(freeze(doc, DOCS[doc]["pdf"], DOCS[doc]["company"],
+                            reuse_index=not args.rebuild_index))
 
     # 只跑了部分文档时，保留其余文档已有的 meta，别把 summary 冲掉
     summary_path = OUT / "summary.json"
@@ -142,8 +182,39 @@ def main() -> int:
             (OUT / doc / "compare.txt").write_text(out.stdout + out.stderr, encoding="utf-8")
             print(f"-- {doc}\n{out.stdout.strip()}", flush=True)
 
+        _attach_eval(summary_path, docs)
+
     print(f"\n基线已冻结到 {OUT}", flush=True)
     return 0
+
+
+def _attach_eval(summary_path: Path, docs: list[str]) -> None:
+    """把 compare.json 的分数并进 summary，别让 summary 只剩行数没有分数。"""
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    by_doc = {m["doc"]: m for m in summary.get("docs", [])}
+    for doc in docs:
+        cmp_path = OUT / doc / "compare.json"
+        if not cmp_path.exists():
+            continue
+        cmp = json.loads(cmp_path.read_text(encoding="utf-8"))
+        c = cmp["counts"]
+        by_doc[doc]["eval"] = {
+            "questions": c["total"], "positive": c["positive"], "negative": c["negative"],
+            "pos_hit": c["pos_hit"], "miss": c["miss"], "absent": c["absent"],
+            "neg_hit": c["neg_hit"], "violated": c["violated"],
+            "verdict_checked": c.get("verdict_checked", 0),
+            "positive_rate": round(c["pos_hit"] / c["positive"], 3) if c["positive"] else None,
+            "rows": cmp["rows"], "rows_without_page": cmp["rows_without_page"],
+            "markers": cmp.get("markers"),
+        }
+    summary["docs"] = [by_doc[d] for d in DOCS if d in by_doc]
+    summary["question_set"] = {
+        **{k: v for k, v in summary.get("question_set", {}).items() if k != "total"},
+        "file": "eval/questions.json",
+        "total": len(json.loads((ROOT / "eval" / "questions.json").read_text(encoding="utf-8"))["questions"]),
+        "markers_file": "eval/markers.json",
+    }
+    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

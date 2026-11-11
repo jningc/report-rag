@@ -1,21 +1,25 @@
 {
   "doc": "chongzuo_green",
   "pdf": "sample/chongzuo_green.pdf",
-  "started": "2026-11-10T18:49:34",
-  "duration_s": 68.6,
+  "company": "sample/chongzuo_green_company.yaml",
+  "company_sha256": "d661da65f3a2",
+  "page_numbering": "physical",
+  "engine_mode": "full-parse",
+  "started": "2026-11-11T19:16:33",
+  "duration_s": 68.2,
   "pages": 105,
   "sections": 6,
   "missing_sections": [
     "资格审查"
   ],
   "rows": {
-    "feibiao": 15,
+    "feibiao": 20,
     "pingfen": 4,
-    "cailiao": 18,
-    "kongwei": 58,
+    "cailiao": 14,
+    "kongwei": 59,
     "shijian": 11,
     "hetong": 7
   },
-  "git_commit": "1189c80",
+  "git_commit": "668f9a8",
   "git_dirty": true
 }

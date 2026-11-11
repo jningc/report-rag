@@ -1,21 +1,25 @@
 {
   "doc": "wenling_video",
   "pdf": "sample/wenling_video.pdf",
-  "started": "2026-11-10T18:50:43",
-  "duration_s": 66.0,
+  "company": "sample/wenling_video_company.yaml",
+  "company_sha256": "496885d0af51",
+  "page_numbering": "physical",
+  "engine_mode": "full-parse",
+  "started": "2026-11-11T19:17:41",
+  "duration_s": 66.1,
   "pages": 64,
   "sections": 6,
   "missing_sections": [
     "资格审查"
   ],
   "rows": {
-    "feibiao": 17,
+    "feibiao": 22,
     "pingfen": 12,
-    "cailiao": 13,
-    "kongwei": 37,
-    "shijian": 15,
-    "hetong": 14
+    "cailiao": 17,
+    "kongwei": 38,
+    "shijian": 13,
+    "hetong": 11
   },
-  "git_commit": "1189c80",
+  "git_commit": "668f9a8",
   "git_dirty": true
 }
