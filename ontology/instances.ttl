@@ -1,0 +1,94 @@
+@prefix tl: <https://github.com/jningc/tender-lint/ontology#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix inst: <https://github.com/jningc/tender-lint/ontology/instances#> .
+
+# 全部取自 sample/beijing_road.pdf 的原件，页码已逐条核对。
+# 用途：给「抽取结果」一个统一的落点，评测时比对的是实例，不是自由文本。
+
+############################################################
+# 页码出处
+############################################################
+
+inst:page4  a tl:PageReference ; tl:pageNumber 4 .
+inst:page8  a tl:PageReference ; tl:pageNumber 8 .
+inst:page18 a tl:PageReference ; tl:pageNumber 18 .
+inst:page25 a tl:PageReference ; tl:pageNumber 25 .
+inst:page26 a tl:PageReference ; tl:pageNumber 26 .
+inst:page83 a tl:PageReference ; tl:pageNumber 83 .
+
+############################################################
+# 项目与采购包
+############################################################
+
+inst:proj a tl:Project ;
+    tl:note "2026 年区管城市道路健康工程（监理服务）" ;
+    tl:hasPackage inst:pkg01 ;
+    tl:evaluatedBy inst:evalMethod .
+
+inst:pkg01 a tl:ProcurementPackage ;
+    tl:note "01 包" ;
+    tl:hasBudget inst:budgetCap ;
+    tl:hasBond inst:bidBond .
+
+inst:budgetCap a tl:Budget ;
+    tl:amountYuan 471303.49 ;          # 47.130349 万元
+    tl:cites inst:page3 ;
+    tl:docVersion "v1" .
+
+inst:page3 a tl:PageReference ; tl:pageNumber 3 .
+
+inst:evalMethod a tl:EvaluationMethod ;
+    tl:note "综合评分法" .
+
+############################################################
+# 资格与证书
+############################################################
+
+inst:qualCivil a tl:Qualification ;
+    tl:clauseText "投标人应具备建设行政主管部门颁发的市政公用工程专业资质乙级及以上监理资质" ;
+    tl:requiresCertificate inst:certSupervisor ;
+    tl:cites inst:page4 ;
+    tl:hasVerdict inst:vSatisfied .
+
+inst:certSupervisor a tl:Certificate ;
+    tl:note "注册监理工程师（市政公用工程）" .
+
+inst:vSatisfied a tl:Verdict ;
+    tl:note "满足" ;
+    tl:hasEvidence inst:evCivil .
+
+inst:evCivil a tl:Evidence ;
+    tl:cites inst:page4 , inst:page25 .
+
+############################################################
+# 保证金与时间
+############################################################
+
+inst:bidBond a tl:Bond ;
+    tl:note "投标保证金" ;
+    tl:amountYuan 8000 ;               # 01 包 8000 元
+    tl:cites inst:page8 ;
+    tl:belongsTo inst:pkg01 .
+
+inst:perfBond a tl:Bond ;
+    tl:note "履约保证金：原文只在投标书模板里一句「按招标文件要求提交」，无金额比例" ;
+    tl:cites inst:page83 ;
+    tl:hasVerdict inst:vManual .
+
+inst:vManual a tl:Verdict ;
+    tl:note "人工看（证据不足，不猜）" .
+
+inst:validity a tl:Requirement ;
+    tl:clauseText "投标有效期自提交投标文件的截止之日起算 90 日历天" ;
+    tl:dayCount 90 ;
+    tl:cites inst:page8 ;
+    tl:hasVerdict inst:vSatisfied .
+
+inst:deadlineBid a tl:Deadline ;
+    tl:note "投标截止（=开标）" ;
+    tl:isoDateTime "2026-08-18T09:00:00+08:00"^^xsd:dateTime .
+
+inst:deadlineDecrypt a tl:Deadline ;
+    tl:note "解密时间 30 分钟" ;
+    tl:cites inst:page8 .

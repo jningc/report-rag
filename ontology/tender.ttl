@@ -1,0 +1,188 @@
+@prefix tl: <https://github.com/jningc/tender-lint/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<https://github.com/jningc/tender-lint/ontology> a owl:Ontology ;
+    rdfs:label "招标文件核对本体"@zh ;
+    rdfs:comment "只建模「招标文件里可以核对的东西」：条款、要求、判定、出处。不建模投标人内部流程。"@zh ;
+    owl:versionInfo "0.1" .
+
+############################################################
+# 类：文档结构（文件 → 章 → 条款 → 出处）
+############################################################
+
+tl:TenderDocument a owl:Class ;
+    rdfs:label "招标文件"@zh ;
+    rdfs:comment "一份可解析的招标文件，对应一个 PDF。"@zh .
+
+tl:Chapter a owl:Class ;
+    rdfs:label "章"@zh ;
+    rdfs:comment "按目录切出来的章，带固定类型（资格/评分/合同/格式…）。"@zh .
+
+tl:Clause a owl:Class ;
+    rdfs:label "条款"@zh ;
+    rdfs:comment "章里的一条可引用条款，是抽取与判定的最小单位。"@zh .
+
+tl:PageReference a owl:Class ;
+    rdfs:label "页码出处"@zh ;
+    rdfs:comment "条款在原件中的位置。没有它就不许下结论。"@zh .
+
+############################################################
+# 类：被核对的内容
+############################################################
+
+tl:Requirement a owl:Class ;
+    rdfs:label "要求"@zh ;
+    rdfs:comment "对投标人的约束：资质、业绩、人员、格式、手续。"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:Qualification a owl:Class ;
+    rdfs:label "资质要求"@zh ;
+    rdfs:subClassOf tl:Requirement .
+
+tl:DisqualificationCondition a owl:Class ;
+    rdfs:label "废标条件"@zh ;
+    rdfs:comment "不满足即投标无效的条款，等级最高。"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:ScoringItem a owl:Class ;
+    rdfs:label "评分项"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:RequiredMaterial a owl:Class ;
+    rdfs:label "应交材料"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:BlankField a owl:Class ;
+    rdfs:label "格式空位"@zh ;
+    rdfs:comment "格式章里必须填写或盖章的空表、空栏。"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:Deadline a owl:Class ;
+    rdfs:label "时间节点"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+tl:ContractTerm a owl:Class ;
+    rdfs:label "合同要点"@zh ;
+    rdfs:subClassOf tl:Clause .
+
+############################################################
+# 类：参与方与钱
+############################################################
+
+tl:Project a owl:Class ;
+    rdfs:label "采购项目"@zh .
+
+tl:ProcurementPackage a owl:Class ;
+    rdfs:label "采购包"@zh ;
+    rdfs:comment "一份文件可能拆成多个包，包与包的上限价、保证金各不相同。"@zh .
+
+tl:Budget a owl:Class ;
+    rdfs:label "预算/最高限价"@zh .
+
+tl:Bond a owl:Class ;
+    rdfs:label "保证金"@zh ;
+    rdfs:comment "投标保证金、履约保证金、质量保证金共用这个类，靠属性区分。"@zh .
+
+tl:Certificate a owl:Class ;
+    rdfs:label "证书"@zh .
+
+tl:Bidder a owl:Class ;
+    rdfs:label "投标人"@zh .
+
+tl:EvaluationMethod a owl:Class ;
+    rdfs:label "评标办法"@zh .
+
+############################################################
+# 类：核对结果
+############################################################
+
+tl:Verdict a owl:Class ;
+    rdfs:label "判定"@zh ;
+    rdfs:comment "三值：满足 / 不满足 / 人工看。人工看表示证据不足，不是第四种结论。"@zh .
+
+tl:Evidence a owl:Class ;
+    rdfs:label "证据集"@zh ;
+    rdfs:comment "支撑一条判定的条款集合。空集或页码缺失时判定必须降级为人工看。"@zh .
+
+############################################################
+# 对象属性
+############################################################
+
+tl:hasChapter a owl:ObjectProperty ;
+    rdfs:label "含章"@zh ;
+    rdfs:domain tl:TenderDocument ; rdfs:range tl:Chapter .
+
+tl:hasClause a owl:ObjectProperty ;
+    rdfs:label "含条款"@zh ;
+    rdfs:domain tl:Chapter ; rdfs:range tl:Clause .
+
+tl:cites a owl:ObjectProperty ;
+    rdfs:label "出处为"@zh ;
+    rdfs:domain tl:Clause ; rdfs:range tl:PageReference .
+
+tl:hasEvidence a owl:ObjectProperty ;
+    rdfs:label "由证据支撑"@zh ;
+    rdfs:domain tl:Verdict ; rdfs:range tl:Evidence .
+
+tl:hasVerdict a owl:ObjectProperty ;
+    rdfs:label "判定为"@zh ;
+    rdfs:domain tl:Requirement ; rdfs:range tl:Verdict .
+
+tl:hasPackage a owl:ObjectProperty ;
+    rdfs:label "含采购包"@zh ;
+    rdfs:domain tl:Project ; rdfs:range tl:ProcurementPackage .
+
+tl:hasBudget a owl:ObjectProperty ;
+    rdfs:label "预算为"@zh ;
+    rdfs:domain tl:ProcurementPackage ; rdfs:range tl:Budget .
+
+tl:hasBond a owl:ObjectProperty ;
+    rdfs:label "涉及保证金"@zh ;
+    rdfs:domain tl:ProcurementPackage ; rdfs:range tl:Bond .
+
+tl:requiresCertificate a owl:ObjectProperty ;
+    rdfs:label "需要证书"@zh ;
+    rdfs:domain tl:Qualification ; rdfs:range tl:Certificate .
+
+tl:evaluatedBy a owl:ObjectProperty ;
+    rdfs:label "按此办法评标"@zh ;
+    rdfs:domain tl:Project ; rdfs:range tl:EvaluationMethod .
+
+tl:appliesTo a owl:ObjectProperty ;
+    rdfs:label "约束对象"@zh ;
+    rdfs:domain tl:Requirement ; rdfs:range tl:Bidder .
+
+tl:belongsTo a owl:ObjectProperty ;
+    rdfs:label "属于"@zh ;
+    rdfs:domain tl:Bond ; rdfs:range tl:ProcurementPackage .
+
+############################################################
+# 数据属性
+############################################################
+
+tl:clauseText a owl:DatatypeProperty ;
+    rdfs:label "条款原文"@zh ; rdfs:range xsd:string .
+
+tl:pageNumber a owl:DatatypeProperty ;
+    rdfs:label "页码"@zh ; rdfs:domain tl:PageReference ; rdfs:range xsd:integer .
+
+tl:amountYuan a owl:DatatypeProperty ;
+    rdfs:label "金额（元）"@zh ; rdfs:range xsd:decimal .
+
+tl:ratioPercent a owl:DatatypeProperty ;
+    rdfs:label "比例（%）"@zh ; rdfs:range xsd:decimal .
+
+tl:dayCount a owl:DatatypeProperty ;
+    rdfs:label "天数"@zh ; rdfs:range xsd:integer .
+
+tl:isoDateTime a owl:DatatypeProperty ;
+    rdfs:label "时间点"@zh ; rdfs:range xsd:dateTime .
+
+tl:docVersion a owl:DatatypeProperty ;
+    rdfs:label "文件版本"@zh ; rdfs:range xsd:string .
+
+tl:note a owl:DatatypeProperty ;
+    rdfs:label "备注"@zh ; rdfs:range xsd:string .
