@@ -1,0 +1,302 @@
+{
+  "doc": "beijing_road",
+  "output": "/Users/ning/Desktop/tender-lint/eval/engine/v1/beijing_road/tables.json",
+  "rows": 60,
+  "rows_without_page": 0,
+  "counts": {
+    "total": 9,
+    "positive": 8,
+    "negative": 1,
+    "hit": 8,
+    "miss": 1,
+    "absent": 0,
+    "violated": 0,
+    "verdict_checked": 7,
+    "pos_hit": 7,
+    "neg_hit": 1
+  },
+  "markers": {
+    "markers_total": 2,
+    "markers_by_char": {
+      "★": 2,
+      "▲": 0
+    },
+    "marker_pages": [
+      26
+    ],
+    "star_rows": 0,
+    "covered_pages": [],
+    "missed_pages": [
+      26
+    ],
+    "note": "p26 的两处 ★ 是「★号条款响应」这个符合性审查项（7 ★ / ★号条款响应），不是被标记的条款本身；这是「按字符判 ★ 必错」的样本"
+  },
+  "detail": [
+    {
+      "id": "bj-bond",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照",
+        "材料对照"
+      ],
+      "expect_tables": [
+        "废标对照",
+        "材料对照"
+      ],
+      "pages": [
+        8,
+        17,
+        25,
+        79
+      ],
+      "expect_pages": [
+        8,
+        17,
+        25
+      ],
+      "extra_pages": [
+        79
+      ],
+      "verdicts": [
+        "不满足",
+        "人工看"
+      ],
+      "expect_verdict": "不满足",
+      "note": "01 包保证金 8000 元，三种形式；company.yaml 里 deposit_ready=false → 判「不满足」才是对的"
+    },
+    {
+      "id": "bj-director",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        4,
+        25
+      ],
+      "expect_pages": [
+        4,
+        25
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "不满足"
+      ],
+      "expect_verdict": "不满足",
+      "note": "要求「市政公用工程 + 总监理工程师任命书 + 注册单位一致」，company.yaml 的总监是房屋建筑工程、无任命书 → 必须判「不满足」"
+    },
+    {
+      "id": "bj-qualification",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        4,
+        25
+      ],
+      "expect_pages": [
+        4,
+        25
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "满足"
+      ],
+      "expect_verdict": "满足",
+      "note": "要求市政公用工程监理乙级及以上；company.yaml 有「市政公用工程监理乙级，有效期 2028-03-01」→ 必须判「满足」（这条和总监那条方向相反，用来防「一律判不满足」）"
+    },
+    {
+      "id": "bj-material-bond",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照",
+        "材料对照"
+      ],
+      "expect_tables": [
+        "材料对照",
+        "废标对照"
+      ],
+      "pages": [
+        8,
+        17,
+        25,
+        79
+      ],
+      "expect_pages": [
+        17,
+        79
+      ],
+      "extra_pages": [
+        8,
+        25
+      ],
+      "verdicts": [
+        "不满足",
+        "人工看"
+      ],
+      "expect_verdict": "不满足",
+      "note": "材料表也要有判定：保证金凭证/交款单据必须提交，deposit_ready=false → 不满足。验的是「材料表 verdict 有没有被模型随手写成人工看」"
+    },
+    {
+      "id": "bj-cap",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        3,
+        8
+      ],
+      "expect_pages": [
+        3,
+        8,
+        26,
+        43
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "满足"
+      ],
+      "expect_verdict": "满足",
+      "note": "01 包最高限价 47.130349 万元；超限价即无效投标。四页都写了，任一处皆可"
+    },
+    {
+      "id": "bj-validity",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照",
+        "时间节点"
+      ],
+      "expect_tables": [
+        "废标对照",
+        "时间节点",
+        "材料对照"
+      ],
+      "pages": [
+        3,
+        4,
+        6,
+        17,
+        18
+      ],
+      "expect_pages": [
+        8,
+        18,
+        26
+      ],
+      "extra_pages": [
+        3,
+        4,
+        6,
+        17
+      ],
+      "verdicts": [
+        "人工看"
+      ],
+      "expect_verdict": "人工看",
+      "note": "投标有效期 90 日历天；有效期不足即无效。资料表 13.1、正文 13.1、符合性审查第 5 项各一处"
+    },
+    {
+      "id": "bj-decrypt",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "miss",
+      "reason": "page",
+      "tables": [
+        "时间节点"
+      ],
+      "expect_tables": [
+        "时间节点",
+        "废标对照"
+      ],
+      "pages": [
+        4,
+        6,
+        10,
+        16,
+        19
+      ],
+      "expect_pages": [
+        8
+      ],
+      "extra_pages": [
+        4,
+        6,
+        10,
+        16,
+        19
+      ],
+      "verdicts": [],
+      "expect_verdict": "人工看",
+      "note": "解密时间 30 分钟，只在资料表 18.2 出现；线上开标的时间约束"
+    },
+    {
+      "id": "bj-price",
+      "doc": "beijing_road",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "评分对照"
+      ],
+      "expect_tables": [
+        "评分对照"
+      ],
+      "pages": [
+        33
+      ],
+      "expect_pages": [
+        33
+      ],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "价格分 30 分，公式（评标基准价/投标报价）×30，只在评标办法出现"
+    },
+    {
+      "id": "bj-neg-perf-bond",
+      "doc": "beijing_road",
+      "kind": "negative",
+      "status": "hit",
+      "reason": "",
+      "tables": [],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [],
+      "expect_pages": [],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "履约保证金是中标后的合同约束，不该出现在废标表。全文只在 p83 投标书模板里出现，正确归宿是合同要点"
+    }
+  ]
+}

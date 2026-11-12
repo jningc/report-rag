@@ -24,9 +24,9 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from tender.ask_box import ask_question
+from tender.engine import check as engine_check
 from tender.parse import render_page_png
 from tender.tools import set_context
-from tender.workflow import run_check, run_check_saved
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE_PDF = ROOT / "sample" / "beijing_road.pdf"
@@ -139,9 +139,9 @@ def _apply(job_id: str, event: dict) -> None:
 
 
 def _worker(job_id: str, pdf_path: str, company_path: str, use_index: bool = False) -> None:
-    run = run_check_saved if use_index else run_check
     try:
-        result = run(pdf_path, company_path, on_progress=lambda event: _apply(job_id, event))
+        result = engine_check(pdf_path, company_path, on_progress=lambda event: _apply(job_id, event),
+                              reuse_index=use_index)
     except Exception as exc:
         with _lock:
             job = _jobs[job_id]

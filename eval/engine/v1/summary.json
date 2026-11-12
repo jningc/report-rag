@@ -1,0 +1,83 @@
+{
+  "engine": "v1",
+  "docs": [
+    {
+      "doc": "beijing_road",
+      "rows": {
+        "feibiao": 13,
+        "pingfen": 9,
+        "cailiao": 11,
+        "kongwei": 5,
+        "shijian": 10,
+        "hetong": 12
+      },
+      "contracts": null,
+      "counts": {
+        "total": 9,
+        "positive": 8,
+        "negative": 1,
+        "hit": 8,
+        "miss": 1,
+        "absent": 0,
+        "violated": 0,
+        "verdict_checked": 7,
+        "pos_hit": 7,
+        "neg_hit": 1
+      }
+    },
+    {
+      "doc": "chongzuo_green",
+      "rows": {
+        "feibiao": 14,
+        "pingfen": 4,
+        "cailiao": 14,
+        "kongwei": 6,
+        "shijian": 12,
+        "hetong": 6
+      },
+      "contracts": null,
+      "counts": {
+        "total": 6,
+        "positive": 5,
+        "negative": 1,
+        "hit": 4,
+        "miss": 1,
+        "absent": 0,
+        "violated": 1,
+        "verdict_checked": 2,
+        "pos_hit": 4,
+        "neg_hit": 0
+      }
+    },
+    {
+      "doc": "wenling_video",
+      "rows": {
+        "feibiao": 20,
+        "pingfen": 12,
+        "cailiao": 17,
+        "kongwei": 7,
+        "shijian": 11,
+        "hetong": 1
+      },
+      "contracts": null,
+      "counts": {
+        "total": 6,
+        "positive": 5,
+        "negative": 1,
+        "hit": 4,
+        "miss": 1,
+        "absent": 1,
+        "violated": 0,
+        "verdict_checked": 3,
+        "pos_hit": 3,
+        "neg_hit": 1
+      }
+    }
+  ],
+  "total": {
+    "pos_hit": 14,
+    "positive": 18,
+    "neg_hit": 2,
+    "negative": 3
+  }
+}

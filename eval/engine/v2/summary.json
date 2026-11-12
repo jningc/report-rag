@@ -1,0 +1,110 @@
+{
+  "engine": "v2",
+  "docs": [
+    {
+      "doc": "beijing_road",
+      "rows": {
+        "feibiao": 14,
+        "pingfen": 9,
+        "cailiao": 10,
+        "kongwei": 5,
+        "shijian": 10,
+        "hetong": 10
+      },
+      "contracts": {
+        "clauses": 58,
+        "findings": 34,
+        "rejects": 0,
+        "verified": {
+          "checked": 34,
+          "passed": 34,
+          "rejected": 0
+        }
+      },
+      "counts": {
+        "total": 9,
+        "positive": 8,
+        "negative": 1,
+        "hit": 8,
+        "miss": 1,
+        "absent": 0,
+        "violated": 0,
+        "verdict_checked": 7,
+        "pos_hit": 7,
+        "neg_hit": 1
+      }
+    },
+    {
+      "doc": "chongzuo_green",
+      "rows": {
+        "feibiao": 17,
+        "pingfen": 4,
+        "cailiao": 13,
+        "kongwei": 10,
+        "shijian": 11,
+        "hetong": 7
+      },
+      "contracts": {
+        "clauses": 61,
+        "findings": 36,
+        "rejects": 1,
+        "verified": {
+          "checked": 36,
+          "passed": 36,
+          "rejected": 0
+        }
+      },
+      "counts": {
+        "total": 6,
+        "positive": 5,
+        "negative": 1,
+        "hit": 4,
+        "miss": 1,
+        "absent": 0,
+        "violated": 1,
+        "verdict_checked": 2,
+        "pos_hit": 4,
+        "neg_hit": 0
+      }
+    },
+    {
+      "doc": "wenling_video",
+      "rows": {
+        "feibiao": 19,
+        "pingfen": 12,
+        "cailiao": 16,
+        "kongwei": 7,
+        "shijian": 11,
+        "hetong": 12
+      },
+      "contracts": {
+        "clauses": 77,
+        "findings": 47,
+        "rejects": 0,
+        "verified": {
+          "checked": 47,
+          "passed": 47,
+          "rejected": 0
+        }
+      },
+      "counts": {
+        "total": 6,
+        "positive": 5,
+        "negative": 1,
+        "hit": 4,
+        "miss": 2,
+        "absent": 0,
+        "violated": 0,
+        "verdict_checked": 3,
+        "pos_hit": 3,
+        "neg_hit": 1
+      }
+    }
+  ],
+  "total": {
+    "pos_hit": 14,
+    "positive": 18,
+    "neg_hit": 2,
+    "negative": 3
+  }
+}

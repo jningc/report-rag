@@ -12,7 +12,8 @@ from openpyxl import Workbook
 from tender.parse import render_page_png
 from tender.sections import TYPE_LABEL
 from tender.tools import set_context
-from tender.workflow import print_tables, run_check
+from tender.workflow import print_tables
+from tender.engine import check as engine_check
 
 SAMPLE = {
     "东城道路监理": "sample/beijing_road.pdf",
@@ -122,7 +123,7 @@ def main():
         yaml.safe_load(company_text)
         company_file = Path_write_yaml(company_text)
         with st.spinner("切章并四步出表，需要调用模型…"):
-            result = run_check(pdf_path, company_file)
+            result = engine_check(pdf_path, company_file)
         set_context(result["index"], result["company"])
         # index 不能放进可序列化缓存之外的展示字段
         st.session_state.result = {k: v for k, v in result.items() if k not in ("index", "pages")}

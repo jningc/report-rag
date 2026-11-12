@@ -63,15 +63,16 @@ def cmd_index(args):
 
 
 def cmd_check(args):
-    """解析招标文件，跑四步对照并打印。"""
+    """解析招标文件，跑核对并打印。--engine 或 TENDER_ENGINE 可选 v1/v2。"""
+    from tender.engine import check
     from tender.step_out import write_step
-    from tender.workflow import render_tables, run_check
+    from tender.workflow import render_tables
 
-    result = run_check(args.pdf, args.company)
+    result = check(args.pdf, args.company, engine=args.engine)
     text = render_tables(result)
     print(text)
     path = write_step(args.pdf, "04_check.txt", text)
-    print(f"\n全文已写入 {path}")
+    print(f"\n引擎 {result.get('engine', 'v1')}，全文已写入 {path}")
 
 
 def cmd_ask(args):
@@ -124,9 +125,11 @@ def main():
     p_index.add_argument("pdf", help="招标文件 PDF")
     p_index.set_defaults(func=cmd_index)
 
-    p_check = sub.add_parser("check", help="切章、四步出表")
+    p_check = sub.add_parser("check", help="切章、出表")
     p_check.add_argument("pdf", help="招标文件 PDF")
     p_check.add_argument("company", nargs="?", default=str(DEFAULT_COMPANY), help="company.yaml")
+    p_check.add_argument("--engine", choices=["v1", "v2"], default=None,
+                         help="v1=五节点直排（默认），v2=四段流水线；也可用环境变量 TENDER_ENGINE")
     p_check.set_defaults(func=cmd_check)
 
     p_web = sub.add_parser("web", help="打开核对页面")

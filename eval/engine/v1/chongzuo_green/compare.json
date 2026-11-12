@@ -1,0 +1,221 @@
+{
+  "doc": "chongzuo_green",
+  "output": "/Users/ning/Desktop/tender-lint/eval/engine/v1/chongzuo_green/tables.json",
+  "rows": 56,
+  "rows_without_page": 0,
+  "counts": {
+    "total": 6,
+    "positive": 5,
+    "negative": 1,
+    "hit": 4,
+    "miss": 1,
+    "absent": 0,
+    "violated": 1,
+    "verdict_checked": 2,
+    "pos_hit": 4,
+    "neg_hit": 0
+  },
+  "markers": {
+    "markers_total": 30,
+    "markers_by_char": {
+      "★": 22,
+      "▲": 8
+    },
+    "marker_pages": [
+      9,
+      16,
+      19,
+      20,
+      21,
+      28,
+      32,
+      44,
+      82,
+      85
+    ],
+    "star_rows": 3,
+    "covered_pages": [
+      32
+    ],
+    "missed_pages": [
+      9,
+      16,
+      19,
+      20,
+      21,
+      28,
+      44,
+      82,
+      85
+    ],
+    "note": "★ 集中在 p19-21 的设备清单（★ 标型号），▲ 分散在须知与格式章；p9 是前附表"
+  },
+  "detail": [
+    {
+      "id": "cz-bond",
+      "doc": "chongzuo_green",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照",
+        "材料对照"
+      ],
+      "pages": [
+        6
+      ],
+      "expect_pages": [
+        6,
+        25,
+        32
+      ],
+      "extra_pages": [],
+      "verdicts": [
+        "无须提供"
+      ],
+      "expect_verdict": [
+        "无须提供",
+        "满足"
+      ],
+      "note": "本项目不收保证金——这是结论，不是缺失。公告、前附表 18、须知 18 三处都这么说；judge 成「不满足」或「人工看」都算错"
+    },
+    {
+      "id": "cz-cap",
+      "doc": "chongzuo_green",
+      "kind": "positive",
+      "status": "miss",
+      "reason": "page",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        32
+      ],
+      "expect_pages": [
+        3,
+        43,
+        45
+      ],
+      "extra_pages": [
+        32
+      ],
+      "verdicts": [
+        "人工看"
+      ],
+      "expect_verdict": "满足",
+      "note": "预算与最高限价同为 2263.76 万元；报价超出即无效投标"
+    },
+    {
+      "id": "cz-price",
+      "doc": "chongzuo_green",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "评分对照"
+      ],
+      "expect_tables": [
+        "评分对照"
+      ],
+      "pages": [
+        46
+      ],
+      "expect_pages": [
+        46,
+        47
+      ],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "价格分 20 分；评分表在 p46 起（含「基准价，其价格分为满分」），公式「（评标基准价／评标报价）×20」在 p47 续页"
+    },
+    {
+      "id": "cz-perf-bond",
+      "doc": "chongzuo_green",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "合同要点"
+      ],
+      "expect_tables": [
+        "合同要点"
+      ],
+      "pages": [
+        55,
+        56,
+        57,
+        59
+      ],
+      "expect_pages": [
+        26,
+        56,
+        57
+      ],
+      "extra_pages": [
+        55,
+        59
+      ],
+      "verdicts": [
+        "人工看",
+        "满足"
+      ],
+      "expect_verdict": null,
+      "note": "履约保证金为中标金额的 5%：前附表 35 规定金额，合同文本第九条规定形式（见索即付保函）"
+    },
+    {
+      "id": "cz-format-bid-sheet",
+      "doc": "chongzuo_green",
+      "kind": "positive",
+      "status": "hit",
+      "reason": "",
+      "tables": [
+        "空位对照"
+      ],
+      "expect_tables": [
+        "空位对照"
+      ],
+      "pages": [
+        91
+      ],
+      "expect_pages": [
+        91
+      ],
+      "extra_pages": [],
+      "verdicts": [],
+      "expect_verdict": null,
+      "note": "格式章里的开标一览表空表（要填单价、数量、总价），是空位表该列出来的"
+    },
+    {
+      "id": "cz-neg-perf-bond",
+      "doc": "chongzuo_green",
+      "kind": "negative",
+      "status": "violated",
+      "reason": "",
+      "tables": [
+        "废标对照"
+      ],
+      "expect_tables": [
+        "废标对照"
+      ],
+      "pages": [
+        26
+      ],
+      "expect_pages": [],
+      "extra_pages": [
+        26
+      ],
+      "verdicts": [
+        "满足"
+      ],
+      "expect_verdict": null,
+      "note": "前附表 35 写了履约保证金 5%，但它属于中标后合同约束，不该进废标表（在废标表出现即算违规）"
+    }
+  ]
+}
