@@ -58,6 +58,8 @@ tender/              核对主路径（解析 → 切章 → 按章检索 → �
   index.py           按章建 BM25 + FAISS
   tables.py          四张表和辅助表的字段合同
   workflow.py        LangGraph 四步核对
+  engine.py          四段流水线（解析 / 抽取 / 比对 / 校验），每段可单独跑
+  stages/            四段各自的提示词与结果解析
   tools.py           search_section / follow_reference / read_company / calc_price_score
   ask_box.py         提问框，最多 5 步工具循环
   llm.py             对话模型客户端
@@ -66,6 +68,8 @@ static/              核对页面
   index.html         效果演示页
   vendor/            PDF.js（pdf.min.js、pdf.worker.min.js）
 docs/                方案
+ontology/            本体：21 类 / 12 对象属性 / 21 实例，附自检脚本
+eval/                题集、基线、分段评测
 data/                运行时索引和上传缓存（不进 Git）
 ```
 
@@ -75,9 +79,23 @@ data/                运行时索引和上传缓存（不进 Git）
 
 旧的报销制度影响面对照不在本分支。完整代码在 tag `v-impact-baseline` 和分支 `feat/policy-impact`。
 
+## 三种表示，各管一段
+
+同一份招标文件，项目里有三种「知识」的表示，分工不重叠：
+
+| 表示 | 存在哪 | 回答什么问题 | 失败长什么样 |
+|---|---|---|---|
+| 四张表 | `tender/tables.py` | 这一条是什么、判成满足还是人工看 | 抽漏一行、页码标错 |
+| 向量检索 | `tender/index.py`（按章 BM25 + FAISS） | 这句话在招标文件的哪一段 | 把履约保证金当投标保证金 |
+| 本体 | `ontology/tender.ttl` | 这条判定该挂哪些证据、缺什么就不许下结论 | 判定没有 `hasEvidence` |
+
+三者不是三套系统：检索负责找原文，表格是输出格式，本体是**约束**——它管的是「一条结论必须带得出页码」，而不是「能不能答对」。
+
+和常见的 GraphRAG 也不一样：本项目不建实体消歧、不做社区摘要、不跑多跳推理。图谱只有二十来个类，作用是让「判定—证据—页码」这条链有固定落点，评测时比对实例而不是比对自由文本。这样做换来两件事：判定可校验（没证据就是没证据），以及换模型时输出结构不变。
+
 ## 评测
 
-`eval/questions.json` 是人工对着 PDF 原文核过页码的题集（当前 8 条，覆盖三份样本用），
+`eval/questions.json` 是人工对着 PDF 原文核过页码的题集（22 条，三份样本各 6–9 条，含负例），
 `eval/compare.py` 拿一次 check 的文本输出直接打分，不调模型：
 
 ```bash
